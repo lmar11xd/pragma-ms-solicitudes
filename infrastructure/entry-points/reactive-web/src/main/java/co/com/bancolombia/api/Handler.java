@@ -1,0 +1,41 @@
+package co.com.bancolombia.api;
+
+import co.com.bancolombia.api.dto.CreateLoanApplicationRequest;
+import co.com.bancolombia.api.mapper.LoanApplicationMapper;
+import co.com.bancolombia.usecase.loanapplication.LoanApplicationUseCase;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.reactive.TransactionalOperator;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
+
+import static org.springframework.web.reactive.function.server.ServerResponse.ok;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class Handler {
+    private final LoanApplicationUseCase loanApplicationUseCase;
+    private final TransactionalOperator tx;
+
+    public Mono<ServerResponse> create(ServerRequest serverRequest) {
+        log.info("Solicitud POST={}", serverRequest.path());
+
+        return serverRequest.bodyToMono(CreateLoanApplicationRequest.class)
+                .flatMap(dto -> loanApplicationUseCase.create(LoanApplicationMapper.toDomain(dto)))
+                .as(tx::transactional)
+                .map(saved -> {
+                            log.info("Solicitud de credito creada con id {}", saved.getId());
+                            return LoanApplicationMapper.toDto(saved);
+                        }
+                )
+                .flatMap(response -> ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(response)
+                )
+                .doOnError(error -> log.error("Fallo en creacion de la solicitud de credito: {}", error.getMessage(), error));
+    }
+}
