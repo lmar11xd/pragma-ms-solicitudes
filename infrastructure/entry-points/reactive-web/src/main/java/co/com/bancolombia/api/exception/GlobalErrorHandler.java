@@ -2,6 +2,7 @@ package co.com.bancolombia.api.exception;
 
 import co.com.bancolombia.api.dto.ErrorResponse;
 import co.com.bancolombia.exception.DomainException;
+import co.com.bancolombia.exception.ExternalServiceException;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBufferFactory;
@@ -47,8 +48,11 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
             status = HttpStatus.valueOf(rse.getStatusCode().value());
             message = rse.getReason();
         }
-        if(ex instanceof DomainException) {
-            details = ((DomainException) ex).getDetails();
+        if(ex instanceof DomainException domainException) {
+            details = domainException.getDetails();
+        }
+        if(ex instanceof ExternalServiceException) {
+            status = HttpStatus.SERVICE_UNAVAILABLE;
         }
 
         ErrorResponse errorResponse = new ErrorResponse(

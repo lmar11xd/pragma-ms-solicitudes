@@ -19,6 +19,7 @@ import static org.springframework.web.reactive.function.server.ServerResponse.ok
 @RequiredArgsConstructor
 public class Handler {
     private final LoanApplicationUseCase loanApplicationUseCase;
+
     private final TransactionalOperator tx;
 
     public Mono<ServerResponse> create(ServerRequest serverRequest) {
@@ -26,12 +27,12 @@ public class Handler {
 
         return serverRequest.bodyToMono(CreateLoanApplicationRequest.class)
                 .flatMap(dto -> loanApplicationUseCase.create(LoanApplicationMapper.toDomain(dto)))
-                .as(tx::transactional)
                 .map(saved -> {
                             log.info("Solicitud de credito creada con id {}", saved.getId());
                             return LoanApplicationMapper.toDto(saved);
                         }
                 )
+                .as(tx::transactional)
                 .flatMap(response -> ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(response)

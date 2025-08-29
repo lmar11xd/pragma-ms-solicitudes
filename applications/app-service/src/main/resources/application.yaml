@@ -20,10 +20,15 @@ management:
     health:
       probes:
         enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
-
 adapters:
+  restconsumer:
+    auth:
+      baseUrl: "http://localhost:8081/api/v1/usuarios/"
   r2dbc:
     host: "localhost"
     port: 5432
@@ -31,10 +36,30 @@ adapters:
     schema: "public"
     username: "app_user"
     password: "app_pass"
-
 logging:
   level:
-    root: INFO
-    org.springframework: INFO
-    co.com.bancolombia: DEBUG
-    reactor.netty: WARN
+    root: "INFO"
+    org.springframework: "INFO"
+    co.com.bancolombia: "DEBUG"
+    reactor.netty: "WARN"
+resilience4j:
+  circuitbreaker:
+    instances:
+      testGet:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: "2s"
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        waitDurationInOpenState: "10s"
+      testPost:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: "2s"
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        waitDurationInOpenState: "10s"
