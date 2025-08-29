@@ -2,6 +2,7 @@ package co.com.bancolombia.usecase.loanapplication;
 
 import co.com.bancolombia.exception.DomainException;
 import co.com.bancolombia.exception.ErrorCode;
+import co.com.bancolombia.model.applicant.gateways.ApplicantPort;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.LoanStatus;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
@@ -16,6 +17,7 @@ public class LoanApplicationUseCase {
 
     private final LoanTypeRepository loanTypeRepository;
     private final LoanApplicationRepository loanApplicationRepository;
+    private final ApplicantPort applicantPort;
 
     public Mono<LoanApplication> create(LoanApplication loanApplication) {
 
@@ -30,10 +32,18 @@ public class LoanApplicationUseCase {
 
         loanApplication.setStatus(LoanStatus.PENDING); // Por defecto pendiente de revision
 
-        return loanTypeRepository.existsByCode(loanApplication.getLoanTypeCode())
-                .flatMap(exists -> exists
-                        ? loanApplicationRepository.save(loanApplication)
-                        : Mono.error(new DomainException(ErrorCode.INVALID_LOANTYPE))
+        return loanTypeRepository
+                .existsByCode(loanApplication.getLoanTypeCode())
+                .flatMap(exists -> {
+                            if (Boolean.TRUE.equals(exists)) {
+                                return applicantPort
+                                        .findApplicantByDocumentNumber(loanApplication.getDocumentNumber())
+                                        .switchIfEmpty(Mono.error(new DomainException(ErrorCode.APPLICANT_NOT_FOUND)))
+                                        .flatMap(applicant -> loanApplicationRepository.save(loanApplication));
+                            }
+
+                            return Mono.error(new DomainException(ErrorCode.INVALID_LOANTYPE));
+                        }
                 );
     }
 }

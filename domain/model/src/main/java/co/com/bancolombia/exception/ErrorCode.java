@@ -7,7 +7,9 @@ public enum ErrorCode {
     REQUERID_DOCUMENTNUMBER("VALIDATION_REQUERID_DOCUMENTNUMBER", "Documento de identidad del solicitante es requerido"),
     INVALID_AMOUNT("VALIDATION_INVALID_AMOUNT", "Monto debe ser mayor a 0"),
     INVALID_TERMMONTHS("VALIDATION_INVALID_TERMMONTHS", "Plazo en meses debe ser mayor a 0"),
-    INVALID_LOANTYPE("VALIDATION_INVALID_LOANTYPE", "Tipo de credito no valido");
+    INVALID_LOANTYPE("VALIDATION_INVALID_LOANTYPE", "Tipo de credito no valido"),
+    APPLICANT_NOT_FOUND("APPLICANT_NOT_FOUND", "No se encontro solicitante con el numero de documento proporcionado"),
+    APPLICANT_SERVICE_FAILED("APPLICANT_SERVICE_FAILED",  "El servicio de autenticacion no esta disponible en este momento");
 
     private final String code;
     private final String defaultMessage;
