@@ -19,6 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Map;
 
+import static co.com.bancolombia.api.util.Utils.toJson;
+
 @Component
 @Order(-2)
 public class GlobalErrorHandler implements ErrorWebExceptionHandler {
@@ -39,20 +41,22 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
-        HttpStatus status = HttpStatus.BAD_REQUEST;
+        HttpStatus status;
         String message = ex.getMessage();
         Map<String, Object> details = Map.of();
 
-        if (ex instanceof IllegalStateException) status = HttpStatus.CONFLICT;
-        if (ex instanceof ResponseStatusException rse) {
-            status = HttpStatus.valueOf(rse.getStatusCode().value());
-            message = rse.getReason();
-        }
-        if(ex instanceof DomainException domainException) {
-            details = domainException.getDetails();
-        }
-        if(ex instanceof ExternalServiceException) {
-            status = HttpStatus.SERVICE_UNAVAILABLE;
+        switch (ex) {
+            case IllegalStateException illegalStateException -> status = HttpStatus.CONFLICT;
+            case ResponseStatusException rse -> {
+                status = HttpStatus.valueOf(rse.getStatusCode().value());
+                message = rse.getReason();
+            }
+            case DomainException domainException -> {
+                status = HttpStatus.BAD_REQUEST;
+                details = domainException.getDetails();
+            }
+            case ExternalServiceException externalServiceException -> status = HttpStatus.SERVICE_UNAVAILABLE;
+            default -> status = HttpStatus.BAD_REQUEST;
         }
 
         ErrorResponse errorResponse = new ErrorResponse(
@@ -64,14 +68,7 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
                 details
         );
 
-        byte[] bytes = ("{" +
-                "\"timestamp\":\"" + errorResponse.timestamp() + "\"," +
-                "\"status\":" + errorResponse.status() + "," +
-                "\"error\":\"" + errorResponse.error() + "\"," +
-                "\"message\":\"" + errorResponse.message() + "\"," +
-                "\"path\":\"" + errorResponse.path() + "\"," +
-                "\"details\":\"" + errorResponse.details() + "\"}")
-                .getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = toJson(errorResponse).getBytes(StandardCharsets.UTF_8);
 
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);

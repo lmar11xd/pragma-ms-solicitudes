@@ -9,7 +9,10 @@ public enum ErrorCode {
     INVALID_TERMMONTHS("VALIDATION_INVALID_TERMMONTHS", "Plazo en meses debe ser mayor a 0"),
     INVALID_LOANTYPE("VALIDATION_INVALID_LOANTYPE", "Tipo de credito no valido"),
     APPLICANT_NOT_FOUND("APPLICANT_NOT_FOUND", "No se encontro solicitante con el numero de documento proporcionado"),
-    APPLICANT_SERVICE_FAILED("APPLICANT_SERVICE_FAILED",  "El servicio de autenticacion no esta disponible en este momento");
+    APPLICANT_SERVICE_FAILED("APPLICANT_SERVICE_FAILED",  "El servicio de autenticacion no esta disponible en este momento"),
+    UNAUTHORIZED("UNAUTHORIZED", "No tiene autorización para acceder a este recurso."),
+    FORBIDDEN("FORBIDDEN", "Acceso denegado."),
+    UNAUTHORIZED_ACTION("UNAUTHORIZED_ACTION", "No puedes crear solicitudes para otro usuario");
 
     private final String code;
     private final String defaultMessage;

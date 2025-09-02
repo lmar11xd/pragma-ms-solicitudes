@@ -4,9 +4,17 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
     implementation "org.springframework:spring-tx"
+
+    implementation("io.jsonwebtoken:jjwt-api:$jwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:$jwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jwtVersion")
+
+    implementation("org.springframework.security:spring-security-oauth2-jose")
+    implementation("org.springframework.security:spring-security-oauth2-resource-server")
 
     implementation "org.springdoc:springdoc-openapi-starter-webflux-ui:$openApiVersion"
 }
