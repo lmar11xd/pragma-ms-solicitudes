@@ -4,5 +4,5 @@ import co.com.bancolombia.model.applicant.Applicant;
 import reactor.core.publisher.Mono;
 
 public interface ApplicantPort {
-    public Mono<Applicant> findApplicantByDocumentNumber(String documentNumber);
+    public Mono<Applicant> findApplicantByDocumentNumber(String documentNumber, String token);
 }

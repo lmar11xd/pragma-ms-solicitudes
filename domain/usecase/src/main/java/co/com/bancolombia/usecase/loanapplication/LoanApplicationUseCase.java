@@ -7,6 +7,7 @@ import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.LoanStatus;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
+import co.com.bancolombia.model.security.SecurityPort;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -18,6 +19,7 @@ public class LoanApplicationUseCase {
     private final LoanTypeRepository loanTypeRepository;
     private final LoanApplicationRepository loanApplicationRepository;
     private final ApplicantPort applicantPort;
+    private final SecurityPort securityPort;
 
     public Mono<LoanApplication> create(LoanApplication loanApplication) {
 
@@ -36,10 +38,27 @@ public class LoanApplicationUseCase {
                 .existsByCode(loanApplication.getLoanTypeCode())
                 .flatMap(exists -> {
                             if (Boolean.TRUE.equals(exists)) {
-                                return applicantPort
-                                        .findApplicantByDocumentNumber(loanApplication.getDocumentNumber())
-                                        .switchIfEmpty(Mono.error(new DomainException(ErrorCode.APPLICANT_NOT_FOUND)))
-                                        .flatMap(applicant -> loanApplicationRepository.save(loanApplication));
+                                return Mono.zip(
+                                                securityPort.getCurrentUserToken(),
+                                                securityPort.getAuthenticatedEmail()
+                                        ).switchIfEmpty(Mono.error(new DomainException(ErrorCode.UNAUTHORIZED)))
+                                        .flatMap(tuple -> {
+                                                    String token = tuple.getT1();
+                                                    String emailFromToken = tuple.getT2();
+
+                                                    return applicantPort
+                                                            .findApplicantByDocumentNumber(loanApplication.getDocumentNumber(), token)
+                                                            .switchIfEmpty(Mono.error(new DomainException(ErrorCode.APPLICANT_NOT_FOUND)))
+                                                            .flatMap(applicant -> {
+                                                                        if (!applicant.getEmail().equals(emailFromToken)) {
+                                                                            return Mono.error(new DomainException(ErrorCode.UNAUTHORIZED_ACTION));
+                                                                        }
+
+                                                                        return loanApplicationRepository.save(loanApplication);
+                                                                    }
+                                                            );
+                                                }
+                                        );
                             }
 
                             return Mono.error(new DomainException(ErrorCode.INVALID_LOANTYPE));

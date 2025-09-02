@@ -37,6 +37,14 @@ public class Handler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(response)
                 )
-                .doOnError(error -> log.error("Fallo en creacion de la solicitud de credito: {}", error.getMessage(), error));
+                .doOnError(error ->
+                        log.error("Fallo en creacion de la solicitud de credito: {}", error.getMessage(), error)
+                );
+    }
+
+    public Mono<ServerResponse> getPendingApplications(ServerRequest serverRequest) {
+        log.info("Solicitud GET={}", serverRequest.path());
+
+        return null;
     }
 }
