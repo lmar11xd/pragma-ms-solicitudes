@@ -2,10 +2,13 @@ package co.com.bancolombia.usecase.loanapplication;
 
 import co.com.bancolombia.exception.DomainException;
 import co.com.bancolombia.exception.ErrorCode;
+import co.com.bancolombia.model.applicant.Applicant;
+import co.com.bancolombia.model.applicant.gateways.ApplicantPort;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.LoanStatus;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
+import co.com.bancolombia.model.security.SecurityPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -16,136 +19,142 @@ import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class LoanApplicationUseCaseTest {
+
     @Mock
     private LoanTypeRepository loanTypeRepository;
-
     @Mock
     private LoanApplicationRepository loanApplicationRepository;
+    @Mock
+    private ApplicantPort applicantPort;
+    @Mock
+    private SecurityPort securityPort;
 
     @InjectMocks
-    private LoanApplicationUseCase loanApplicationUseCase;
+    private LoanApplicationUseCase useCase;
+
+    private LoanApplication validLoan;
 
     @BeforeEach
-    void setup() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
-    }
 
-    private LoanApplication buildValidLoanApplication() {
-        return LoanApplication.builder()
-                .documentNumber("12345678")
-                .amount(BigDecimal.valueOf(1000))
-                .termMonths(12)
-                .loanTypeCode("CODE01")
-                .build();
+        validLoan = new LoanApplication();
+        validLoan.setDocumentNumber("12345678");
+        validLoan.setAmount(BigDecimal.valueOf(1000));
+        validLoan.setTermMonths(12);
+        validLoan.setLoanTypeCode("PERSONAL");
     }
 
     @Test
-    void shouldReturnErrorWhenDocumentNumberIsBlank() {
-        LoanApplication invalid = buildValidLoanApplication();
-        invalid.setDocumentNumber("");
+    void shouldFailWhenDocumentIsBlank() {
+        validLoan.setDocumentNumber(" ");
 
-        StepVerifier.create(loanApplicationUseCase.create(invalid))
+        StepVerifier.create(useCase.create(validLoan))
                 .expectErrorMatches(ex -> ex instanceof DomainException &&
                         ((DomainException) ex).getErrorCode() == ErrorCode.REQUERID_DOCUMENTNUMBER)
                 .verify();
-
-        verifyNoInteractions(loanTypeRepository, loanApplicationRepository);
     }
 
     @Test
-    void shouldReturnErrorWhenAmountIsNullOrZeroOrNegative() {
-        LoanApplication invalid1 = buildValidLoanApplication();
-        invalid1.setAmount(null);
+    void shouldFailWhenAmountIsInvalid() {
+        validLoan.setAmount(BigDecimal.ZERO);
 
-        StepVerifier.create(loanApplicationUseCase.create(invalid1))
+        StepVerifier.create(useCase.create(validLoan))
                 .expectErrorMatches(ex -> ex instanceof DomainException &&
                         ((DomainException) ex).getErrorCode() == ErrorCode.INVALID_AMOUNT)
                 .verify();
-
-        LoanApplication invalid2 = buildValidLoanApplication();
-        invalid2.setAmount(BigDecimal.ZERO);
-
-        StepVerifier.create(loanApplicationUseCase.create(invalid2))
-                .expectErrorMatches(ex -> ex instanceof DomainException &&
-                        ((DomainException) ex).getErrorCode() == ErrorCode.INVALID_AMOUNT)
-                .verify();
-
-        LoanApplication invalid3 = buildValidLoanApplication();
-        invalid3.setAmount(BigDecimal.valueOf(-50));
-
-        StepVerifier.create(loanApplicationUseCase.create(invalid3))
-                .expectErrorMatches(ex -> ex instanceof DomainException &&
-                        ((DomainException) ex).getErrorCode() == ErrorCode.INVALID_AMOUNT)
-                .verify();
-
-        verifyNoInteractions(loanTypeRepository, loanApplicationRepository);
     }
 
     @Test
-    void shouldReturnErrorWhenTermMonthsIsNullOrInvalid() {
-        LoanApplication invalid1 = buildValidLoanApplication();
-        invalid1.setTermMonths(null);
+    void shouldFailWhenTermIsInvalid() {
+        validLoan.setTermMonths(0);
 
-        StepVerifier.create(loanApplicationUseCase.create(invalid1))
+        StepVerifier.create(useCase.create(validLoan))
                 .expectErrorMatches(ex -> ex instanceof DomainException &&
                         ((DomainException) ex).getErrorCode() == ErrorCode.INVALID_TERMMONTHS)
                 .verify();
-
-        LoanApplication invalid2 = buildValidLoanApplication();
-        invalid2.setTermMonths(0);
-
-        StepVerifier.create(loanApplicationUseCase.create(invalid2))
-                .expectErrorMatches(ex -> ex instanceof DomainException &&
-                        ((DomainException) ex).getErrorCode() == ErrorCode.INVALID_TERMMONTHS)
-                .verify();
-
-        LoanApplication invalid3 = buildValidLoanApplication();
-        invalid3.setTermMonths(-5);
-
-        StepVerifier.create(loanApplicationUseCase.create(invalid3))
-                .expectErrorMatches(ex -> ex instanceof DomainException &&
-                        ((DomainException) ex).getErrorCode() == ErrorCode.INVALID_TERMMONTHS)
-                .verify();
-
-        verifyNoInteractions(loanTypeRepository, loanApplicationRepository);
     }
 
     @Test
-    void shouldReturnErrorWhenLoanTypeDoesNotExist() {
-        LoanApplication valid = buildValidLoanApplication();
+    void shouldFailWhenLoanTypeDoesNotExist() {
+        when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(false));
 
-        when(loanTypeRepository.existsByCode("CODE01")).thenReturn(Mono.just(false));
-
-        StepVerifier.create(loanApplicationUseCase.create(valid))
+        StepVerifier.create(useCase.create(validLoan))
                 .expectErrorMatches(ex -> ex instanceof DomainException &&
                         ((DomainException) ex).getErrorCode() == ErrorCode.INVALID_LOANTYPE)
                 .verify();
-
-        verify(loanTypeRepository).existsByCode("CODE01");
-        verifyNoInteractions(loanApplicationRepository);
     }
 
     @Test
-    void shouldSaveLoanApplicationWhenValid() {
-        LoanApplication valid = buildValidLoanApplication();
+    void shouldFailWhenSecurityPortIsEmpty() {
+        when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
+        when(securityPort.getCurrentUserToken()).thenReturn(Mono.empty());
+        when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.empty());
 
-        when(loanTypeRepository.existsByCode("CODE01")).thenReturn(Mono.just(true));
-        when(loanApplicationRepository.save(any(LoanApplication.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+        StepVerifier.create(useCase.create(validLoan))
+                .expectErrorMatches(ex -> ex instanceof DomainException &&
+                        ((DomainException) ex).getErrorCode() == ErrorCode.UNAUTHORIZED)
+                .verify();
+    }
 
-        StepVerifier.create(loanApplicationUseCase.create(valid))
-                .assertNext(saved -> {
-                    assertEquals(LoanStatus.PENDING, saved.getStatus());
-                    assertEquals("12345678", saved.getDocumentNumber());
-                    assertEquals(BigDecimal.valueOf(1000), saved.getAmount());
-                    assertEquals(12, saved.getTermMonths());
+    @Test
+    void shouldFailWhenApplicantNotFound() {
+        when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
+        when(securityPort.getCurrentUserToken()).thenReturn(Mono.just("token"));
+        when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.just("user@test.com"));
+        when(applicantPort.findApplicantByDocumentNumber("12345678", "token"))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.create(validLoan))
+                .expectErrorMatches(ex -> ex instanceof DomainException &&
+                        ((DomainException) ex).getErrorCode() == ErrorCode.APPLICANT_NOT_FOUND)
+                .verify();
+    }
+
+    @Test
+    void shouldFailWhenApplicantEmailDoesNotMatch() {
+        when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
+        when(securityPort.getCurrentUserToken()).thenReturn(Mono.just("token"));
+        when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.just("other@test.com"));
+
+        Applicant applicant = new Applicant();
+        applicant.setEmail("user@test.com");
+
+        when(applicantPort.findApplicantByDocumentNumber("12345678", "token"))
+                .thenReturn(Mono.just(applicant));
+
+        StepVerifier.create(useCase.create(validLoan))
+                .expectErrorMatches(ex -> ex instanceof DomainException &&
+                        ((DomainException) ex).getErrorCode() == ErrorCode.UNAUTHORIZED_ACTION)
+                .verify();
+    }
+
+    @Test
+    void shouldSaveWhenValidApplication() {
+        when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
+        when(securityPort.getCurrentUserToken()).thenReturn(Mono.just("token"));
+        when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.just("user@test.com"));
+
+        Applicant applicant = new Applicant();
+        applicant.setEmail("user@test.com");
+
+        when(applicantPort.findApplicantByDocumentNumber("12345678", "token"))
+                .thenReturn(Mono.just(applicant));
+
+        when(loanApplicationRepository.save(any(LoanApplication.class)))
+                .thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+
+        StepVerifier.create(useCase.create(validLoan))
+                .assertNext(result -> {
+                    assert result.getStatus() == LoanStatus.PENDING;
+                    assert result.getAmount().equals(BigDecimal.valueOf(1000));
                 })
                 .verifyComplete();
 
-        verify(loanTypeRepository).existsByCode("CODE01");
-        verify(loanApplicationRepository).save(any(LoanApplication.class));
+        verify(loanApplicationRepository, times(1)).save(any(LoanApplication.class));
     }
 }

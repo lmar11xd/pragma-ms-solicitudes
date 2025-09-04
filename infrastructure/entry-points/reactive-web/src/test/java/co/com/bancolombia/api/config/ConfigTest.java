@@ -5,38 +5,46 @@ import co.com.bancolombia.api.RouterRest;
 import co.com.bancolombia.usecase.loanapplication.LoanApplicationUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.transaction.reactive.TransactionalOperator;
+import reactor.core.publisher.Mono;
 
-@ContextConfiguration(classes = {RouterRest.class, Handler.class})
 @WebFluxTest
 @Import({CorsConfig.class, SecurityHeadersConfig.class})
+@ContextConfiguration(classes = {RouterRest.class, Handler.class})
+@TestPropertySource(properties = {
+        "cors.allowed-origins=http://localhost:3000,http://example.com",
+        "spring.main.allow-bean-definition-overriding=true",
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration"
+})
 class ConfigTest {
 
-    @Mock
+    @MockitoBean
     private LoanApplicationUseCase loanApplicationUseCase;
 
-    @Mock
+    @MockitoBean
     private TransactionalOperator tx;
 
     @Autowired
     private WebTestClient webTestClient;
 
     @BeforeEach
-    void setup() {
-        MockitoAnnotations.openMocks(this);
+    void setUp() {
+        Mockito.when(tx.transactional(Mockito.<Mono<Object>>any()))
+                .thenAnswer(inv -> inv.getArgument(0));
     }
 
     @Test
     void corsConfigurationShouldAllowOrigins() {
-        webTestClient.get()
-                .uri("/api/usecase/path")
+        webTestClient.post()
+                .uri("/api/v1/solicitudes")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueEquals("Content-Security-Policy",

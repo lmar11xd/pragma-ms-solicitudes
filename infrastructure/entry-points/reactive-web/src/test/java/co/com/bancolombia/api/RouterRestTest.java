@@ -1,60 +1,40 @@
 package co.com.bancolombia.api;
 
-import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.mockito.Mockito;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.server.ServerResponse;
 
-@ContextConfiguration(classes = {RouterRest.class, Handler.class})
-@WebFluxTest
 class RouterRestTest {
 
-    @Autowired
     private WebTestClient webTestClient;
+    private Handler handler;
 
-    @Test
-    void testListenGETUseCase() {
-        webTestClient.get()
-                .uri("/api/usecase/path")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
+    @BeforeEach
+    void setUp() {
+        handler = Mockito.mock(Handler.class);
+
+        // Simular comportamiento del handler.create
+        Mockito.when(handler.create(Mockito.any()))
+                .thenReturn(ServerResponse.created(null).build());
+
+        // Simular comportamiento del handler.getPendingApplications
+        Mockito.when(handler.getPendingApplications(Mockito.any()))
+                .thenReturn(ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue("[]"));
+
+        RouterRest routerRest = new RouterRest();
+        webTestClient = WebTestClient.bindToRouterFunction(routerRest.routerFunction(handler)).build();
     }
 
     @Test
-    void testListenGETOtherUseCase() {
-        webTestClient.get()
-                .uri("/api/otherusercase/path")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
-    }
-
-    @Test
-    void testListenPOSTUseCase() {
+    void shouldRoutePostToCreate() {
         webTestClient.post()
-                .uri("/api/usecase/otherpath")
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue("")
+                .uri("/api/v1/solicitudes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"documentNumber\":\"123\",\"amount\":1000,\"termMonths\":12,\"loanTypeCode\":\"CODE1\"}")
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
+                .expectStatus().isCreated();
     }
 }
