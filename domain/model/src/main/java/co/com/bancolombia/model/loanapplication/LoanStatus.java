@@ -1,5 +1,5 @@
 package co.com.bancolombia.model.loanapplication;
 
 public enum LoanStatus {
-    PENDING, APPROVED, REJECTED
+    PENDING, REJECTED, MANUAL_REVIEW, APPROVED
 }

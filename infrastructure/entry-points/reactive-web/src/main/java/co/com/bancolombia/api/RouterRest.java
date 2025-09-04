@@ -2,10 +2,13 @@ package co.com.bancolombia.api;
 
 import co.com.bancolombia.api.dto.CreateLoanApplicationRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
@@ -48,10 +51,34 @@ public class RouterRest {
                                     @ApiResponse(responseCode = "400", description = "Datos invalidos")
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/solicitudes",
+                    produces = {MediaType.APPLICATION_JSON_VALUE},
+                    method = RequestMethod.GET,
+                    beanClass = Handler.class,
+                    beanMethod = "listPendingApplications",
+                    operation = @Operation(
+                            operationId = "listPendingApplications",
+                            summary = "Listar solicitudes para revisión del asesor",
+                            description = "Devuelve una lista paginada y filtrable de solicitudes en estados PENDING, REJECTED o MANUAL_REVIEW",
+                            parameters = {
+                                    @Parameter(name = "page", in = ParameterIn.QUERY, example = "0"),
+                                    @Parameter(name = "size", in = ParameterIn.QUERY, example = "20"),
+                                    @Parameter(name = "loanType", in = ParameterIn.QUERY, description = "Código de tipo de préstamo"),
+                                    @Parameter(name = "documentNumber", in = ParameterIn.QUERY, description = "Documento del solicitante")
+                            },
+                            responses = {
+                                    @ApiResponse(responseCode = "200", description = "OK"),
+                                    @ApiResponse(responseCode = "401", description = "No autenticado"),
+                                    @ApiResponse(responseCode = "403", description = "Acceso denegado")
+                            },
+                            security = @SecurityRequirement(name = "bearerAuth")
+                    )
             )
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         return route(POST("/api/v1/solicitudes"), handler::create)
-                .andRoute(GET(""), handler::getPendingApplications);
+                .andRoute(GET("/api/v1/solicitudes"), handler::listPendingApplications);
     }
 }

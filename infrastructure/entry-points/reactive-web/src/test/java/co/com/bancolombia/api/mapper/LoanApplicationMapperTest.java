@@ -20,7 +20,8 @@ class LoanApplicationMapperTest {
                 "123456789",
                 new BigDecimal("5000"),
                 24,
-                "HIPOTECARIO",
+                "200",
+                new BigDecimal("10"),
                 "Test Comment"
         );
 
@@ -32,7 +33,8 @@ class LoanApplicationMapperTest {
         assertThat(domain.getDocumentNumber()).isEqualTo("123456789");
         assertThat(domain.getAmount()).isEqualByComparingTo("5000");
         assertThat(domain.getTermMonths()).isEqualTo(24);
-        assertThat(domain.getLoanTypeCode()).isEqualTo("HIPOTECARIO");
+        assertThat(domain.getLoanTypeCode()).isEqualTo("200");
+        assertThat(domain.getInterestRate()).isEqualByComparingTo("10");
         assertThat(domain.getComment()).isEqualTo("Test Comment");
         assertThat(domain.getCreatedAt()).isNotNull(); // generado con Instant.now()
         assertThat(domain.getStatus()).isNull(); // en este mapper inicial está null
@@ -47,7 +49,9 @@ class LoanApplicationMapperTest {
                 "987654321",
                 new BigDecimal("10000"),
                 36,
-                "CONSUMO",
+                "300",
+                new BigDecimal("10"),
+                new BigDecimal("100"),
                 "Another Comment",
                 now,
                 LoanStatus.PENDING
@@ -61,7 +65,9 @@ class LoanApplicationMapperTest {
         assertThat(dto.documentNumber()).isEqualTo("987654321");
         assertThat(dto.amount()).isEqualByComparingTo("10000");
         assertThat(dto.termMonths()).isEqualTo(36);
-        assertThat(dto.loanTypeCode()).isEqualTo("CONSUMO");
+        assertThat(dto.loanTypeCode()).isEqualTo("300");
+        assertThat(dto.insterestRate()).isEqualByComparingTo("10");
+        assertThat(dto.monthlyInstallment()).isEqualByComparingTo("100");
         assertThat(dto.comment()).isEqualTo("Another Comment");
         assertThat(dto.createdAt()).isEqualTo(now);
         assertThat(dto.status()).isEqualTo("PENDING");

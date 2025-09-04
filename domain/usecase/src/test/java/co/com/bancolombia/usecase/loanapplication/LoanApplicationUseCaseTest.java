@@ -47,6 +47,7 @@ class LoanApplicationUseCaseTest {
         validLoan.setAmount(BigDecimal.valueOf(1000));
         validLoan.setTermMonths(12);
         validLoan.setLoanTypeCode("PERSONAL");
+        validLoan.setInterestRate(BigDecimal.valueOf(10));
     }
 
     @Test

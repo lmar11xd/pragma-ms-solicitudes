@@ -14,6 +14,8 @@ public record CreateLoanApplicationRequest(
         @NotNull @Min(1) Integer termMonths,
         @Schema(description = "Codigo del tipo de credito", example = "100")
         @NotBlank String loanTypeCode,
+        @Schema(description = "Tasa de Interés Anual", example = "15")
+        @NotNull @DecimalMin("0.01") BigDecimal interestRate,
         @Schema(description = "Comentario", example = "Credito para trabajo")
         String comment
 ) {

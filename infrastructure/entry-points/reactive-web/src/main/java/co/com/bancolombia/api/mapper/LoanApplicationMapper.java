@@ -15,6 +15,8 @@ public final class LoanApplicationMapper {
                 dto.amount(),
                 dto.termMonths(),
                 dto.loanTypeCode(),
+                dto.interestRate(),
+                null,
                 dto.comment(),
                 Instant.now(),
                 null
@@ -28,6 +30,8 @@ public final class LoanApplicationMapper {
                 domain.getAmount(),
                 domain.getTermMonths(),
                 domain.getLoanTypeCode(),
+                domain.getInterestRate(),
+                domain.getMonthlyInstallment(),
                 domain.getComment(),
                 domain.getCreatedAt(),
                 domain.getStatus().name()

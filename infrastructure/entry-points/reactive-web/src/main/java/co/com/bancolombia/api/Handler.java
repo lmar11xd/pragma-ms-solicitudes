@@ -1,5 +1,6 @@
 package co.com.bancolombia.api;
 
+import co.com.bancolombia.api.dto.AdvisorReviewResponse;
 import co.com.bancolombia.api.dto.CreateLoanApplicationRequest;
 import co.com.bancolombia.api.mapper.LoanApplicationMapper;
 import co.com.bancolombia.usecase.loanapplication.LoanApplicationUseCase;
@@ -42,9 +43,24 @@ public class Handler {
                 );
     }
 
-    public Mono<ServerResponse> getPendingApplications(ServerRequest serverRequest) {
-        log.info("Solicitud GET={}", serverRequest.path());
+    public Mono<ServerResponse> listPendingApplications(ServerRequest request) {
+        log.info("Solicitud GET {}", request.path());
 
-        return null;
+        int page = Integer.parseInt(request.queryParam("page").orElse("0"));
+        int size = Integer.parseInt(request.queryParam("size").orElse("20"));
+        String loanType = request.queryParam("loanType").orElse(null);
+        String documentNumber = request.queryParam("documentNumber").orElse(null);
+
+        return loanApplicationUseCase.listPendingApplications(page, size, loanType, documentNumber)
+                .map(pr -> AdvisorReviewResponse.builder()
+                        .content(pr.content())
+                        .totalElements(pr.totalElements())
+                        .page(pr.page())
+                        .size(pr.size())
+                        .build())
+                .flatMap(body -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(body))
+                .doOnError(e -> log.error("Fallo listando solicitudes para asesor: {}", e.getMessage(), e));
     }
 }

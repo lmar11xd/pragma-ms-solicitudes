@@ -20,6 +20,8 @@ public class LoanApplication {
     private BigDecimal amount;
     private Integer termMonths;
     private String loanTypeCode;
+    private BigDecimal interestRate;
+    private BigDecimal monthlyInstallment;
     private String comment;
     private Instant createdAt;
     private LoanStatus status;
