@@ -41,16 +41,17 @@ public class LoanApplicationUseCase {
                                 return Mono.zip(
                                                 securityPort.getCurrentUserToken(),
                                                 securityPort.getAuthenticatedEmail()
-                                        ).switchIfEmpty(Mono.error(new DomainException(ErrorCode.UNAUTHORIZED)))
+                                        )
+                                        .switchIfEmpty(Mono.error(new DomainException(ErrorCode.UNAUTHORIZED)))
                                         .flatMap(tuple -> {
                                                     String token = tuple.getT1();
                                                     String emailFromToken = tuple.getT2();
 
                                                     return applicantPort
-                                                            .findApplicantByDocumentNumber(loanApplication.getDocumentNumber(), token)
+                                                            .findApplicantByDocumentNumber(loanApplication.getDocumentNumber(), token) // Obtiene solicitante del MS Autenticacion
                                                             .switchIfEmpty(Mono.error(new DomainException(ErrorCode.APPLICANT_NOT_FOUND)))
                                                             .flatMap(applicant -> {
-                                                                        if (!applicant.getEmail().equals(emailFromToken)) {
+                                                                        if (!applicant.getEmail().equals(emailFromToken)) { // Email no coincide
                                                                             return Mono.error(new DomainException(ErrorCode.UNAUTHORIZED_ACTION));
                                                                         }
 

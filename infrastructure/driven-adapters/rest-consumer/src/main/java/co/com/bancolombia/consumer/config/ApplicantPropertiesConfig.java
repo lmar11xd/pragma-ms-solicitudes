@@ -7,13 +7,13 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "adapters.restconsumer.auth")
 public class ApplicantPropertiesConfig {
 
-        private String baseUrl;
+    private String baseUrl;
 
-        public String getBaseUrl() {
-            return baseUrl;
-        }
+    public String getBaseUrl() {
+        return baseUrl;
+    }
 
-        public void setBaseUrl(String baseUrl) {
-            this.baseUrl = baseUrl;
-        }
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
 }
