@@ -9,6 +9,8 @@ public record LoanApplicationDto(
         BigDecimal amount,
         Integer termMonths,
         String loanTypeCode,
+        BigDecimal insterestRate,
+        BigDecimal monthlyInstallment,
         String comment,
         Instant createdAt,
         String status

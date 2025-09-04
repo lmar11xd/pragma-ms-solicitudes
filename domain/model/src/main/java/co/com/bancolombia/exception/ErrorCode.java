@@ -12,7 +12,11 @@ public enum ErrorCode {
     APPLICANT_SERVICE_FAILED("APPLICANT_SERVICE_FAILED",  "El servicio de autenticacion no esta disponible en este momento"),
     UNAUTHORIZED("UNAUTHORIZED", "No tiene autorización para acceder a este recurso."),
     FORBIDDEN("FORBIDDEN", "Acceso denegado."),
-    UNAUTHORIZED_ACTION("UNAUTHORIZED_ACTION", "No puedes crear solicitudes para otro usuario");
+    UNAUTHORIZED_ACTION("UNAUTHORIZED_ACTION", "No puedes crear solicitudes para otro usuario"),
+
+    DATABASE_CONSTRAINT_VIOLATION("DATABASE_CONSTRAINT_VIOLATION", "Error de clave unica"),
+    DATABASE_LOCK_TIMEOUT("DATABASE_LOCK_TIMEOUT", "Error de conexion a base de datos"),
+    DATABASE_ERROR("DATABASE_ERROR", "Error de base de datos");
 
     private final String code;
     private final String defaultMessage;

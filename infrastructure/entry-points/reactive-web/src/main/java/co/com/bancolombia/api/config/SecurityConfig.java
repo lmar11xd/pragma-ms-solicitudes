@@ -50,6 +50,10 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/api/v1/solicitudes")
                         .hasAnyRole("CUSTOMER")
 
+                        // Listar solicitudes de credito → solo ADVISER
+                        .pathMatchers(HttpMethod.GET, "/api/v1/solicitudes")
+                        .hasAnyRole("ADVISER")
+
                         // Todos los demás endpoints requieren autenticación
                         .anyExchange().authenticated()
                 )

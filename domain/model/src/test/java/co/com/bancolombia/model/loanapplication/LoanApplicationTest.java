@@ -38,6 +38,8 @@ class LoanApplicationTest {
                 BigDecimal.valueOf(5000),
                 24,
                 "MORTGAGE",
+                BigDecimal.valueOf(10),
+                BigDecimal.valueOf(1000),
                 "House loan",
                 now,
                 LoanStatus.APPROVED
@@ -48,6 +50,8 @@ class LoanApplicationTest {
         assertThat(loan.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(5000));
         assertThat(loan.getTermMonths()).isEqualTo(24);
         assertThat(loan.getLoanTypeCode()).isEqualTo("MORTGAGE");
+        assertThat(loan.getInterestRate()).isEqualByComparingTo(BigDecimal.valueOf(10));
+        assertThat(loan.getMonthlyInstallment()).isEqualByComparingTo(BigDecimal.valueOf(1000));
         assertThat(loan.getComment()).isEqualTo("House loan");
         assertThat(loan.getCreatedAt()).isEqualTo(now);
         assertThat(loan.getStatus()).isEqualTo(LoanStatus.APPROVED);
@@ -63,6 +67,8 @@ class LoanApplicationTest {
                 .amount(BigDecimal.valueOf(2000))
                 .termMonths(6)
                 .loanTypeCode("AUTO")
+                .interestRate(new BigDecimal(10))
+                .monthlyInstallment(new BigDecimal(1000))
                 .comment("Car loan")
                 .createdAt(now)
                 .status(LoanStatus.REJECTED)
@@ -73,6 +79,8 @@ class LoanApplicationTest {
         assertThat(loan.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(2000));
         assertThat(loan.getTermMonths()).isEqualTo(6);
         assertThat(loan.getLoanTypeCode()).isEqualTo("AUTO");
+        assertThat(loan.getInterestRate()).isEqualByComparingTo(BigDecimal.valueOf(10));
+        assertThat(loan.getMonthlyInstallment()).isEqualByComparingTo(BigDecimal.valueOf(1000));
         assertThat(loan.getComment()).isEqualTo("Car loan");
         assertThat(loan.getCreatedAt()).isEqualTo(now);
         assertThat(loan.getStatus()).isEqualTo(LoanStatus.REJECTED);
@@ -86,6 +94,8 @@ class LoanApplicationTest {
                 .amount(BigDecimal.valueOf(3000))
                 .termMonths(18)
                 .loanTypeCode("BUSINESS")
+                .interestRate(new BigDecimal(10))
+                .monthlyInstallment(new BigDecimal(1000))
                 .comment("Business loan")
                 .createdAt(Instant.now())
                 .status(LoanStatus.PENDING)

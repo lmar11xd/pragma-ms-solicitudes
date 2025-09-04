@@ -17,6 +17,10 @@ public record LoanApplicationEntity(
         Integer termMonths,
         @Column("loan_type_code")
         String loanTypeCode,
+        @Column("interest_rate")
+        BigDecimal interestRate,
+        @Column("monthly_installment")
+        BigDecimal monthlyInstallment,
         String comment,
         @Column("created_at")
         Instant createdAt,

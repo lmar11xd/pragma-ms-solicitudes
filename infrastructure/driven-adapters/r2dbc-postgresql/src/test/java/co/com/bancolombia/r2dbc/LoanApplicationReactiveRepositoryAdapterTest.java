@@ -10,8 +10,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivecommons.utils.ObjectMapper;
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.math.BigDecimal;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -26,10 +29,13 @@ class LoanApplicationReactiveRepositoryAdapterTest {
     @Mock
     private ObjectMapper objectMapper;
 
+    @Mock
+    private R2dbcEntityTemplate template;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        adapter = new LoanApplicationReactiveRepositoryAdapter(repository, objectMapper);
+        adapter = new LoanApplicationReactiveRepositoryAdapter(repository, objectMapper, template);
     }
 
     @Test
@@ -41,6 +47,7 @@ class LoanApplicationReactiveRepositoryAdapterTest {
                 .amount(new java.math.BigDecimal("5000.00"))
                 .termMonths(12)
                 .loanTypeCode("PERSONAL")
+                .interestRate(new BigDecimal(10))
                 .comment("Testing loan")
                 .createdAt(java.time.Instant.now())
                 .status(LoanStatus.PENDING)
@@ -52,6 +59,8 @@ class LoanApplicationReactiveRepositoryAdapterTest {
                 domain.getAmount(),
                 domain.getTermMonths(),
                 domain.getLoanTypeCode(),
+                domain.getInterestRate(),
+                domain.getMonthlyInstallment(),
                 domain.getComment(),
                 domain.getCreatedAt(),
                 domain.getStatus().name()
