@@ -12,7 +12,7 @@ import java.util.Collection;
 public interface LoanApplicationRepository {
     Mono<LoanApplication> save(LoanApplication loanApplication);
 
-    Flux<LoanApplication> findForAdvisorReview(
+    Flux<LoanApplication> findForFilters(
             Collection<LoanStatus> statuses,
             @Nullable String loanTypeCode,
             @Nullable String documentNumber,
@@ -20,7 +20,7 @@ public interface LoanApplicationRepository {
             int limit
     );
 
-    Mono<Long> countForAdvisorReview(
+    Mono<Long> countForFilters(
             Collection<LoanStatus> statuses,
             @Nullable String loanTypeCode,
             @Nullable String documentNumber

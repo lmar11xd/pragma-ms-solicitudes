@@ -43,15 +43,16 @@ public class Handler {
                 );
     }
 
-    public Mono<ServerResponse> listPendingApplications(ServerRequest request) {
+    public Mono<ServerResponse> listApplications(ServerRequest request) {
         log.info("Solicitud GET {}", request.path());
 
         int page = Integer.parseInt(request.queryParam("page").orElse("0"));
         int size = Integer.parseInt(request.queryParam("size").orElse("20"));
+        String statuses = request.queryParam("statuses").orElse(null);
         String loanType = request.queryParam("loanType").orElse(null);
         String documentNumber = request.queryParam("documentNumber").orElse(null);
 
-        return loanApplicationUseCase.listPendingApplications(page, size, loanType, documentNumber)
+        return loanApplicationUseCase.listPendingApplications(page, size, statuses, loanType, documentNumber)
                 .map(pr -> AdvisorReviewResponse.builder()
                         .content(pr.content())
                         .totalElements(pr.totalElements())
