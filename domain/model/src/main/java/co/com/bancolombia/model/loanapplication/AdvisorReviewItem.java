@@ -10,6 +10,7 @@ public record AdvisorReviewItem(
         Integer termMonths,
         String email,
         String names,
+        String documentNumber,
         String loanType,
         BigDecimal interestRate,
         String statusApplication,

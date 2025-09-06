@@ -19,6 +19,7 @@ import reactor.util.annotation.Nullable;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.Arrays;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -86,18 +87,23 @@ public class LoanApplicationUseCase {
 
     public Mono<PageResponse<AdvisorReviewItem>> listPendingApplications(
             int page, int size,
+            @Nullable String statuses,
             @Nullable String loanTypeCode,
             @Nullable String documentNumber
     ) {
         // Estados sujetos a revisión del asesor
-        var statuses = List.of(LoanStatus.PENDING, LoanStatus.REJECTED, LoanStatus.MANUAL_REVIEW);
+        var lststatuses = List.of(LoanStatus.PENDING, LoanStatus.REJECTED, LoanStatus.MANUAL_REVIEW); // Por defecto
+
+        if (statuses != null) {
+            lststatuses = Arrays.stream(statuses.split(",")).map(LoanStatus::valueOf).toList();
+        }
 
         int offset = page * size;
 
-        Mono<Long> total = loanApplicationRepository.countForAdvisorReview(statuses, loanTypeCode, documentNumber);
+        Mono<Long> total = loanApplicationRepository.countForFilters(lststatuses, loanTypeCode, documentNumber);
 
         Flux<AdvisorReviewItem> rows = loanApplicationRepository
-                .findForAdvisorReview(statuses, loanTypeCode, documentNumber, offset, size)
+                .findForFilters(lststatuses, loanTypeCode, documentNumber, offset, size)
                 .flatMap(loan -> securityPort.getCurrentUserToken()
                         .flatMap(token -> Mono.zip(
                                 applicantPort.findApplicantByDocumentNumber(loan.getDocumentNumber(), token),
@@ -113,6 +119,7 @@ public class LoanApplicationUseCase {
                                     .termMonths(loan.getTermMonths())
                                     .email(applicant.getEmail())
                                     .names(applicant.getNames() + " " + applicant.getLastNames())
+                                    .documentNumber(applicant.getDocumentNumber())
                                     .loanType(loan.getLoanTypeCode())
                                     .interestRate(loan.getInterestRate())
                                     .statusApplication(loan.getStatus().name())

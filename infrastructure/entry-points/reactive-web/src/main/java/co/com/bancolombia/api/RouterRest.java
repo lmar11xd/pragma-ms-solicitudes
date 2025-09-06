@@ -57,14 +57,15 @@ public class RouterRest {
                     produces = {MediaType.APPLICATION_JSON_VALUE},
                     method = RequestMethod.GET,
                     beanClass = Handler.class,
-                    beanMethod = "listPendingApplications",
+                    beanMethod = "listApplications",
                     operation = @Operation(
-                            operationId = "listPendingApplications",
-                            summary = "Listar solicitudes para revisión del asesor",
-                            description = "Devuelve una lista paginada y filtrable de solicitudes en estados PENDING, REJECTED o MANUAL_REVIEW",
+                            operationId = "listApplications",
+                            summary = "Listar solicitudes",
+                            description = "Devuelve una lista paginada y filtrable de solicitudes",
                             parameters = {
                                     @Parameter(name = "page", in = ParameterIn.QUERY, example = "0"),
                                     @Parameter(name = "size", in = ParameterIn.QUERY, example = "20"),
+                                    @Parameter(name = "statuses", in = ParameterIn.QUERY, description = "Lista de estados separados por coma"),
                                     @Parameter(name = "loanType", in = ParameterIn.QUERY, description = "Código de tipo de préstamo"),
                                     @Parameter(name = "documentNumber", in = ParameterIn.QUERY, description = "Documento del solicitante")
                             },
@@ -79,6 +80,6 @@ public class RouterRest {
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         return route(POST("/api/v1/solicitudes"), handler::create)
-                .andRoute(GET("/api/v1/solicitudes"), handler::listPendingApplications);
+                .andRoute(GET("/api/v1/solicitudes"), handler::listApplications);
     }
 }

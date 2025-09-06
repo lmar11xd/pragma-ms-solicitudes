@@ -21,7 +21,7 @@ class RouterRestTest {
                 .thenReturn(ServerResponse.created(null).build());
 
         // Simular comportamiento del handler.getPendingApplications
-        Mockito.when(handler.listPendingApplications(Mockito.any()))
+        Mockito.when(handler.listApplications(Mockito.any()))
                 .thenReturn(ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue("[]"));
 
         RouterRest routerRest = new RouterRest();

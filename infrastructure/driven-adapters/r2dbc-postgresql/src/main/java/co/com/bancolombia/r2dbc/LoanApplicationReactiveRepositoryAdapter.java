@@ -50,12 +50,12 @@ public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOpe
 
         return repository.save(entity)
                 .map(this::toDomain)
-                .doOnError(this::mapToDomainException);
+                .onErrorMap(this::mapToDomainException);
     }
 
     @Override
-    public Flux<LoanApplication> findForAdvisorReview(Collection<LoanStatus> statuses, String loanTypeCode, String documentNumber, int offset, int limit) {
-        log.info("findForAdvisorReview statuses={}, loanType={}, doc={}", statuses, loanTypeCode, documentNumber);
+    public Flux<LoanApplication> findForFilters(Collection<LoanStatus> statuses, String loanTypeCode, String documentNumber, int offset, int limit) {
+        log.info("findForFilters statuses={}, loanType={}, doc={}", statuses, loanTypeCode, documentNumber);
 
         Pageable pageable = PageRequest.of(offset, limit);
 
@@ -79,8 +79,8 @@ public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOpe
     }
 
     @Override
-    public Mono<Long> countForAdvisorReview(Collection<LoanStatus> statuses, String loanTypeCode, String documentNumber) {
-        log.info("countForAdvisorReview statuses={}, loanType={}, doc={}", statuses, loanTypeCode, documentNumber);
+    public Mono<Long> countForFilters(Collection<LoanStatus> statuses, String loanTypeCode, String documentNumber) {
+        log.info("countForFilters statuses={}, loanType={}, doc={}", statuses, loanTypeCode, documentNumber);
 
         Criteria criteria = Criteria.where("status").in(statuses);
 
@@ -99,7 +99,7 @@ public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOpe
     public Mono<BigDecimal> sumApprovedMonthlyDebtByDocument(String documentNumber) {
         log.info("sumApprovedMonthlyDebtByDocumentdoc={}", documentNumber);
         return repository.sumApprovedMonthlyDebtByDocument(documentNumber)
-                .doOnError(this::mapToDomainException);
+                .onErrorMap(this::mapToDomainException);
     }
 
     private LoanApplication toDomain(LoanApplicationEntity entity) {

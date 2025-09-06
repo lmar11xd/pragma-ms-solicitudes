@@ -45,7 +45,7 @@ public class ApplicantClient implements ApplicantPort {
     }
 
     // Fallback cuando el circuito se abre o hay error
-    private Mono<Applicant> fallbackFindApplicantByDocumentNumber(String documentNumber, Throwable ex) {
+    private Mono<Applicant> fallbackFindApplicantByDocumentNumber(String documentNumber, String token, Throwable ex) {
         return Mono.error(ex);
     }
 }
