@@ -133,16 +133,15 @@ public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOpe
     }
 
     private DomainException mapToDomainException(Throwable throwable) {
+        Map<String, Object> details = Map.of("cause", throwable.getMessage());
+
         if (throwable instanceof DataIntegrityViolationException) {
-            return new DomainException(ErrorCode.DATABASE_CONSTRAINT_VIOLATION,
-                    Map.of("cause", throwable.getMessage()));
+            return new DomainException(ErrorCode.DATABASE_CONSTRAINT_VIOLATION, details);
         }
         if (throwable instanceof CannotAcquireLockException) {
-            return new DomainException(ErrorCode.DATABASE_LOCK_TIMEOUT,
-                    Map.of("cause", throwable.getMessage()));
+            return new DomainException(ErrorCode.DATABASE_LOCK_TIMEOUT, details);
         }
-        return new DomainException(ErrorCode.DATABASE_ERROR,
-                Map.of("cause", throwable.getMessage()));
+        return new DomainException(ErrorCode.DATABASE_ERROR, details);
     }
 
 }
