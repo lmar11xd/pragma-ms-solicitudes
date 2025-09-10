@@ -4,7 +4,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.crypto.SecretKey;
 import java.util.Base64;
@@ -18,17 +17,11 @@ class JwtProviderTest {
 
     @BeforeEach
     void setUp() {
-        jwtProvider = new JwtProvider();
-
         // Generamos clave secreta de 256 bits
         SecretKey secretKey = Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS256);
         String secretBase64 = Base64.getEncoder().encodeToString(secretKey.getEncoded());
 
-        // Inyectamos los valores privados simulando @Value
-        ReflectionTestUtils.setField(jwtProvider, "secret", secretBase64);
-        ReflectionTestUtils.setField(jwtProvider, "expiration", 3600L);
-
-        jwtProvider.init(); // inicializa la key
+        jwtProvider = new JwtProvider(secretBase64, 3600L);
     }
 
     @Test

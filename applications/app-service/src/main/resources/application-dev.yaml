@@ -1,0 +1,19 @@
+server:
+  port: 8081
+cors:
+  allowed-origins: "*"
+adapters:
+  restconsumer:
+    auth:
+      baseUrl: "http://autenticacion:8082/api/v1/usuarios/"
+  r2dbc:
+    host: "sol-db"
+    port: 5432
+    database: "soldb"
+    schema: "public"
+    username: "soluser"
+    password: "solpass"
+security:
+  jwt:
+    secret: "kYf5mJvQx6jR1LWYiwvhP2Z5gTw4Xt4lUOpd4XyD5rk=" # debe coincidir con auth-service
+    expiration: 3600 # 1h en s

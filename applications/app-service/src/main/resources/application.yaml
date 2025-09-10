@@ -1,5 +1,3 @@
-server:
-  port: 8082
 spring:
   application:
     name: "MsSolicitudes"
@@ -10,7 +8,7 @@ spring:
       enabled: true
       path: "/h2"
   profiles:
-    include: null
+    active: local
 management:
   endpoints:
     web:
@@ -23,19 +21,6 @@ management:
   health:
     circuitbreakers:
       enabled: true
-cors:
-  allowed-origins: "http://localhost:4200,http://localhost:8080"
-adapters:
-  restconsumer:
-    auth:
-      baseUrl: "http://localhost:8081/api/v1/usuarios/"
-  r2dbc:
-    host: "localhost"
-    port: 5432
-    database: "pragma_reactive"
-    schema: "public"
-    username: "app_user"
-    password: "app_pass"
 logging:
   level:
     root: "INFO"
@@ -63,8 +48,3 @@ resilience4j:
         slidingWindowSize: 10
         minimumNumberOfCalls: 10
         waitDurationInOpenState: "10s"
-
-security:
-  jwt:
-    secret: "kYf5mJvQx6jR1LWYiwvhP2Z5gTw4Xt4lUOpd4XyD5rk=" # debe coincidir con auth-service
-    expiration: 3600 # 1h en s
