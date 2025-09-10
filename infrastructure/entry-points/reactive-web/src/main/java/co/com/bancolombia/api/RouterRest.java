@@ -39,7 +39,7 @@ public class RouterRest {
                     operation = @Operation(
                             operationId = "create",
                             summary = "Crear solicitud",
-                            description = "Registra un nueva solicitud de prestamo en el sistema",
+                            description = "Registra un nueva solicitud de prestamo en el sistema (CUSTOMER)",
                             requestBody = @RequestBody(
                                     required = true,
                                     content = @Content(
@@ -61,7 +61,7 @@ public class RouterRest {
                     operation = @Operation(
                             operationId = "listApplications",
                             summary = "Listar solicitudes",
-                            description = "Devuelve una lista paginada y filtrable de solicitudes",
+                            description = "Devuelve una lista paginada y filtrable de solicitudes (ADVISER)",
                             parameters = {
                                     @Parameter(name = "page", in = ParameterIn.QUERY, example = "0"),
                                     @Parameter(name = "size", in = ParameterIn.QUERY, example = "20"),

@@ -1,0 +1,19 @@
+server:
+  port: 8082
+cors:
+  allowed-origins: "*"
+adapters:
+  restconsumer:
+    auth:
+      baseUrl: "http://localhost:8081/api/v1/usuarios/"
+  r2dbc:
+    host: "localhost"
+    port: 5432
+    database: "pragma_reactive"
+    schema: "public"
+    username: "app_user"
+    password: "app_pass"
+security:
+  jwt:
+    secret: "kYf5mJvQx6jR1LWYiwvhP2Z5gTw4Xt4lUOpd4XyD5rk=" # debe coincidir con auth-service
+    expiration: 3600 # 1h en s

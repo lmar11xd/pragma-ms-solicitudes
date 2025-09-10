@@ -2,7 +2,6 @@ package co.com.bancolombia.api.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -16,15 +15,17 @@ import java.util.List;
 @Slf4j
 @Component
 public class JwtProvider {
-    @Value("${security.jwt.secret}")
-    private String secret;
-    @Value("${security.jwt.expiration}")
-    private long expiration;
+    private final String secret;
+    private final long expiration;
 
-    private SecretKey key;
+    private final SecretKey key;
 
-    @PostConstruct
-    void init() {
+    public JwtProvider(
+            @Value("${security.jwt.secret}") String secret,
+            @Value("${security.jwt.expiration}") long expiration
+    ) {
+        this.secret = secret;
+        this.expiration = expiration;
         this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
     }
 
