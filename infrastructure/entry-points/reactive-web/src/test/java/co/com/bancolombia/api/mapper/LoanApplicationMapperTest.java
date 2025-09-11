@@ -54,6 +54,7 @@ class LoanApplicationMapperTest {
                 new BigDecimal("100"),
                 "Another Comment",
                 now,
+                now,
                 LoanStatus.PENDING
         );
 

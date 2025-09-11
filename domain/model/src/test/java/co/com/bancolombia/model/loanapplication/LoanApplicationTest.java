@@ -42,6 +42,7 @@ class LoanApplicationTest {
                 BigDecimal.valueOf(1000),
                 "House loan",
                 now,
+                now,
                 LoanStatus.APPROVED
         );
 
@@ -54,6 +55,7 @@ class LoanApplicationTest {
         assertThat(loan.getMonthlyInstallment()).isEqualByComparingTo(BigDecimal.valueOf(1000));
         assertThat(loan.getComment()).isEqualTo("House loan");
         assertThat(loan.getCreatedAt()).isEqualTo(now);
+        assertThat(loan.getUpdatedAt()).isEqualTo(now);
         assertThat(loan.getStatus()).isEqualTo(LoanStatus.APPROVED);
     }
 
@@ -71,6 +73,7 @@ class LoanApplicationTest {
                 .monthlyInstallment(new BigDecimal(1000))
                 .comment("Car loan")
                 .createdAt(now)
+                .updatedAt(now)
                 .status(LoanStatus.REJECTED)
                 .build();
 
@@ -83,6 +86,7 @@ class LoanApplicationTest {
         assertThat(loan.getMonthlyInstallment()).isEqualByComparingTo(BigDecimal.valueOf(1000));
         assertThat(loan.getComment()).isEqualTo("Car loan");
         assertThat(loan.getCreatedAt()).isEqualTo(now);
+        assertThat(loan.getUpdatedAt()).isEqualTo(now);
         assertThat(loan.getStatus()).isEqualTo(LoanStatus.REJECTED);
     }
 
@@ -98,6 +102,7 @@ class LoanApplicationTest {
                 .monthlyInstallment(new BigDecimal(1000))
                 .comment("Business loan")
                 .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .status(LoanStatus.PENDING)
                 .build();
 

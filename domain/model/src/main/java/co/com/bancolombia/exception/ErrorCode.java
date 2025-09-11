@@ -16,7 +16,10 @@ public enum ErrorCode {
 
     DATABASE_CONSTRAINT_VIOLATION("DATABASE_CONSTRAINT_VIOLATION", "Error de clave unica"),
     DATABASE_LOCK_TIMEOUT("DATABASE_LOCK_TIMEOUT", "Error de conexion a base de datos"),
-    DATABASE_ERROR("DATABASE_ERROR", "Error de base de datos");
+    DATABASE_ERROR("DATABASE_ERROR", "Error de base de datos"),
+    INVALID_STATUS("INVALID_STATUS", "No es un estado valido para esta operacion"),
+    LOAN_NOT_FOUND("LOAN_NOT_FOUND","Solicitud de credito no encontrada"),
+    SQS_SEND_ERROR("SQS_SEND_ERROR", "Error con SQS");
 
     private final String code;
     private final String defaultMessage;

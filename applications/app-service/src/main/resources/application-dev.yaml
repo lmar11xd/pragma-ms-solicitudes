@@ -13,6 +13,11 @@ adapters:
     schema: "public"
     username: "soluser"
     password: "solpass"
+  sqs:
+    region: "us-east-1"
+    queueUrl: "https://sqs.us-east-1.amazonaws.com/825765403293/PragmaNotificationQueue"
+    endpoint: "https://sqs.us-east-1.amazonaws.com/825765403293/PragmaNotificationQueue" # For localstack only
+
 security:
   jwt:
     secret: "kYf5mJvQx6jR1LWYiwvhP2Z5gTw4Xt4lUOpd4XyD5rk=" # debe coincidir con auth-service

@@ -3,6 +3,7 @@ package co.com.bancolombia.config;
 import co.com.bancolombia.model.applicant.gateways.ApplicantPort;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
+import co.com.bancolombia.model.notification.gateways.NotificationPort;
 import co.com.bancolombia.model.security.SecurityPort;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,6 +28,8 @@ class UseCasesConfigTest {
     private ApplicantPort applicantPort;
     @MockitoBean
     private SecurityPort securityPort;
+    @MockitoBean
+    private NotificationPort notificationPort;
 
     @Test
     void testUseCaseBeansExist(ApplicationContext context) {

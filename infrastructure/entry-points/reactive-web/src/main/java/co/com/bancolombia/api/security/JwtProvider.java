@@ -2,7 +2,7 @@ package co.com.bancolombia.api.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +12,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
-@Slf4j
+@Log4j2
 @Component
 public class JwtProvider {
     private final String secret;

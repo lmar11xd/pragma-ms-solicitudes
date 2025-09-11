@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.util.Collection;
 
 public interface LoanApplicationRepository {
+    Mono<LoanApplication> findById(String id);
+
     Mono<LoanApplication> save(LoanApplication loanApplication);
 
     Flux<LoanApplication> findForFilters(

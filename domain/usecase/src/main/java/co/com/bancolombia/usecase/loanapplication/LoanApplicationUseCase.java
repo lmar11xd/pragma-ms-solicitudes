@@ -7,7 +7,7 @@ import co.com.bancolombia.model.applicant.gateways.ApplicantPort;
 import co.com.bancolombia.model.loanapplication.AdvisorReviewItem;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.LoanStatus;
-import co.com.bancolombia.model.loanapplication.PageResponse;
+import co.com.bancolombia.model.loanapplication.Page;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
 import co.com.bancolombia.model.security.SecurityPort;
@@ -85,7 +85,7 @@ public class LoanApplicationUseCase {
                 );
     }
 
-    public Mono<PageResponse<AdvisorReviewItem>> listPendingApplications(
+    public Mono<Page<AdvisorReviewItem>> listApplications(
             int page, int size,
             @Nullable String statuses,
             @Nullable String loanTypeCode,
@@ -130,7 +130,7 @@ public class LoanApplicationUseCase {
 
         return rows.collectList()
                 .zipWith(total)
-                .map(tuple -> PageResponse.<AdvisorReviewItem>builder()
+                .map(tuple -> Page.<AdvisorReviewItem>builder()
                         .content(tuple.getT1())
                         .totalElements(tuple.getT2())
                         .page(page)

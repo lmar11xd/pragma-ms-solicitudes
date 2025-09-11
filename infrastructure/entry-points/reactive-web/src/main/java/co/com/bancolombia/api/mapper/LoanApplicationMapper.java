@@ -19,6 +19,7 @@ public final class LoanApplicationMapper {
                 null,
                 dto.comment(),
                 Instant.now(),
+                Instant.now(),
                 null
         );
     }
@@ -34,6 +35,7 @@ public final class LoanApplicationMapper {
                 domain.getMonthlyInstallment(),
                 domain.getComment(),
                 domain.getCreatedAt(),
+                domain.getUpdatedAt(),
                 domain.getStatus().name()
         );
     }
