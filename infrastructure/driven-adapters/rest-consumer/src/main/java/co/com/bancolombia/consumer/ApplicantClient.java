@@ -7,12 +7,14 @@ import co.com.bancolombia.model.applicant.Applicant;
 import co.com.bancolombia.model.applicant.gateways.ApplicantPort;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class ApplicantClient implements ApplicantPort {
@@ -23,6 +25,7 @@ public class ApplicantClient implements ApplicantPort {
     @Override
     @CircuitBreaker(name = "findApplicantByDocumentNumberCB", fallbackMethod = "fallbackFindApplicantByDocumentNumber")
     public Mono<Applicant> findApplicantByDocumentNumber(String documentNumber, String token) {
+        log.info("Iniciando búsqueda de solicitante con documento {}", documentNumber);
         return webClient.build()
                 .get()
                 .uri(applicantPropertiesConfig.getBaseUrl() + "/document/{documentNumber}", documentNumber)

@@ -58,6 +58,7 @@ class LoanApplicationReactiveRepositoryAdapterTest {
                 BigDecimal.valueOf(90),
                 "comment",
                 Instant.now(),
+                Instant.now(),
                 LoanStatus.PENDING.name()
         );
     }
@@ -72,6 +73,7 @@ class LoanApplicationReactiveRepositoryAdapterTest {
                 BigDecimal.valueOf(12),
                 BigDecimal.valueOf(90),
                 "comment",
+                Instant.now(),
                 Instant.now(),
                 LoanStatus.PENDING
         );

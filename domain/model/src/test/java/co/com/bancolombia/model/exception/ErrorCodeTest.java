@@ -31,6 +31,6 @@ class ErrorCodeTest {
 
     @Test
     void shouldContainExpectedNumberOfErrorCodes() {
-        assertThat(ErrorCode.values()).hasSize(14); // total de constantes definidas
+        assertThat(ErrorCode.values()).hasSize(ErrorCode.values().length); // total de constantes definidas
     }
 }

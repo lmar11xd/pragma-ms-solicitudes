@@ -7,7 +7,7 @@ import co.com.bancolombia.model.applicant.gateways.ApplicantPort;
 import co.com.bancolombia.model.loanapplication.AdvisorReviewItem;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.LoanStatus;
-import co.com.bancolombia.model.loanapplication.PageResponse;
+import co.com.bancolombia.model.loanapplication.Page;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
 import co.com.bancolombia.model.security.SecurityPort;
@@ -197,8 +197,8 @@ class LoanApplicationUseCaseTest {
                 .thenReturn(Mono.just(BigDecimal.valueOf(500)));
 
         // Act
-        Mono<PageResponse<AdvisorReviewItem>> result = useCase
-                .listPendingApplications(0, 10, null, null, null);
+        Mono<Page<AdvisorReviewItem>> result = useCase
+                .listApplications(0, 10, null, null, null);
 
         // Assert
         StepVerifier.create(result)

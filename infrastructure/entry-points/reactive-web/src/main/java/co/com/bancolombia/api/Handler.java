@@ -1,50 +1,41 @@
 package co.com.bancolombia.api;
 
-import co.com.bancolombia.api.dto.AdvisorReviewResponse;
 import co.com.bancolombia.api.dto.CreateLoanApplicationRequest;
+import co.com.bancolombia.api.dto.UpdateStatusRequest;
 import co.com.bancolombia.api.mapper.LoanApplicationMapper;
-import co.com.bancolombia.usecase.loanapplication.LoanApplicationUseCase;
+import co.com.bancolombia.api.service.LoanApplicationService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.web.reactive.function.server.ServerResponse.ok;
 
-@Slf4j
+@Log4j2
 @Component
 @RequiredArgsConstructor
 public class Handler {
-    private final LoanApplicationUseCase loanApplicationUseCase;
-
-    private final TransactionalOperator tx;
+    private final LoanApplicationService loanApplicationService;
 
     public Mono<ServerResponse> create(ServerRequest serverRequest) {
-        log.info("Solicitud POST={}", serverRequest.path());
+        log.info("Solicitud POST::create {}", serverRequest.path());
 
         return serverRequest.bodyToMono(CreateLoanApplicationRequest.class)
-                .flatMap(dto -> loanApplicationUseCase.create(LoanApplicationMapper.toDomain(dto)))
-                .map(saved -> {
-                            log.info("Solicitud de credito creada con id {}", saved.getId());
-                            return LoanApplicationMapper.toDto(saved);
-                        }
-                )
-                .as(tx::transactional)
+                .flatMap(dto -> loanApplicationService.create(LoanApplicationMapper.toDomain(dto)))
                 .flatMap(response -> ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(response)
                 )
                 .doOnError(error ->
-                        log.error("Fallo en creacion de la solicitud de credito: {}", error.getMessage(), error)
+                        log.error("Falló en creación de la solicitud de crédito: {}", error.getMessage(), error)
                 );
     }
 
     public Mono<ServerResponse> listApplications(ServerRequest request) {
-        log.info("Solicitud GET {}", request.path());
+        log.info("Solicitud GET::listApplications {}", request.path());
 
         int page = Integer.parseInt(request.queryParam("page").orElse("0"));
         int size = Integer.parseInt(request.queryParam("size").orElse("20"));
@@ -52,16 +43,25 @@ public class Handler {
         String loanType = request.queryParam("loanType").orElse(null);
         String documentNumber = request.queryParam("documentNumber").orElse(null);
 
-        return loanApplicationUseCase.listPendingApplications(page, size, statuses, loanType, documentNumber)
-                .map(pr -> AdvisorReviewResponse.builder()
-                        .content(pr.content())
-                        .totalElements(pr.totalElements())
-                        .page(pr.page())
-                        .size(pr.size())
-                        .build())
+        return loanApplicationService.listApplications(page, size, statuses, loanType, documentNumber)
                 .flatMap(body -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(body))
-                .doOnError(e -> log.error("Fallo listando solicitudes para asesor: {}", e.getMessage(), e));
+                .doOnError(e -> log.error("Falló listando solicitudes para asesor: {}", e.getMessage(), e));
+    }
+
+    public Mono<ServerResponse> changeStatus(ServerRequest request) {
+        log.info("Solicitud PUT::changeStatus {}", request.path());
+
+        String loanId = request.pathVariable("id");
+
+        return request.bodyToMono(UpdateStatusRequest.class)
+                .flatMap(dto -> loanApplicationService
+                        .changeStatus(loanId, dto.status().name()))
+                .flatMap(body -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(body))
+                .doOnError(e -> log.error("Falló actualizando estado solicitud id={}: {}", loanId, e.getMessage(), e));
+
     }
 }

@@ -13,6 +13,7 @@ public record LoanApplicationDto(
         BigDecimal monthlyInstallment,
         String comment,
         Instant createdAt,
+        Instant updatedAt,
         String status
 ) {
 }

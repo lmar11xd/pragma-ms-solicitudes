@@ -2,10 +2,8 @@ package co.com.bancolombia.api.config;
 
 import co.com.bancolombia.api.Handler;
 import co.com.bancolombia.api.RouterRest;
-import co.com.bancolombia.usecase.loanapplication.LoanApplicationUseCase;
-import org.junit.jupiter.api.BeforeEach;
+import co.com.bancolombia.api.service.LoanApplicationService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
@@ -13,8 +11,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.transaction.reactive.TransactionalOperator;
-import reactor.core.publisher.Mono;
 
 @WebFluxTest
 @Import({CorsConfig.class, SecurityHeadersConfig.class})
@@ -27,19 +23,10 @@ import reactor.core.publisher.Mono;
 class ConfigTest {
 
     @MockitoBean
-    private LoanApplicationUseCase loanApplicationUseCase;
-
-    @MockitoBean
-    private TransactionalOperator tx;
+    private LoanApplicationService loanApplicationService;
 
     @Autowired
     private WebTestClient webTestClient;
-
-    @BeforeEach
-    void setUp() {
-        Mockito.when(tx.transactional(Mockito.<Mono<Object>>any()))
-                .thenAnswer(inv -> inv.getArgument(0));
-    }
 
     @Test
     void corsConfigurationShouldAllowOrigins() {

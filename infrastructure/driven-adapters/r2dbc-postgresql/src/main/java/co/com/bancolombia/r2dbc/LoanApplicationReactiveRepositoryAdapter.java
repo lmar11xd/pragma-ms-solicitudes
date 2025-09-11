@@ -7,7 +7,7 @@ import co.com.bancolombia.model.loanapplication.LoanStatus;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.r2dbc.entity.LoanApplicationEntity;
 import co.com.bancolombia.r2dbc.helper.ReactiveAdapterOperations;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
-@Slf4j
+@Log4j2
 @Repository
 public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         LoanApplication,
@@ -40,6 +40,13 @@ public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOpe
     public LoanApplicationReactiveRepositoryAdapter(LoanApplicationReactiveRepository repository, ObjectMapper mapper, R2dbcEntityTemplate template) {
         super(repository, mapper, d -> mapper.map(d, LoanApplication.class));
         this.template = template;
+    }
+
+    @Override
+    public Mono<LoanApplication> findById(String id) {
+        log.info("Iniciando búsqueda de solicitud de credito con id {}", id);
+
+        return repository.findById(id).map(this::toDomain);
     }
 
     @Override
@@ -113,6 +120,7 @@ public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOpe
                 entity.monthlyInstallment(),
                 entity.comment(),
                 entity.createdAt(),
+                entity.updatedAt(),
                 LoanStatus.valueOf(entity.status())
         );
     }
@@ -128,21 +136,20 @@ public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOpe
                 domain.getMonthlyInstallment(),
                 domain.getComment(),
                 domain.getCreatedAt(),
+                domain.getUpdatedAt(),
                 domain.getStatus().name()
         );
     }
 
     private DomainException mapToDomainException(Throwable throwable) {
+        Map<String, Object> details = Map.of("cause", throwable.getMessage());
         if (throwable instanceof DataIntegrityViolationException) {
-            return new DomainException(ErrorCode.DATABASE_CONSTRAINT_VIOLATION,
-                    Map.of("cause", throwable.getMessage()));
+            return new DomainException(ErrorCode.DATABASE_CONSTRAINT_VIOLATION, details);
         }
         if (throwable instanceof CannotAcquireLockException) {
-            return new DomainException(ErrorCode.DATABASE_LOCK_TIMEOUT,
-                    Map.of("cause", throwable.getMessage()));
+            return new DomainException(ErrorCode.DATABASE_LOCK_TIMEOUT, details);
         }
-        return new DomainException(ErrorCode.DATABASE_ERROR,
-                Map.of("cause", throwable.getMessage()));
+        return new DomainException(ErrorCode.DATABASE_ERROR, details);
     }
 
 }

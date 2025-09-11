@@ -4,12 +4,12 @@ import co.com.bancolombia.model.loantype.LoanType;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
 import co.com.bancolombia.r2dbc.entity.LoanTypeEntity;
 import co.com.bancolombia.r2dbc.helper.ReactiveAdapterOperations;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
-@Slf4j
+@Log4j2
 @Repository
 public class LoanTypeReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         LoanType,

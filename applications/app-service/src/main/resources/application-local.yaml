@@ -1,11 +1,11 @@
 server:
-  port: 8082
+  port: 8081
 cors:
   allowed-origins: "*"
 adapters:
   restconsumer:
     auth:
-      baseUrl: "http://localhost:8081/api/v1/usuarios/"
+      baseUrl: "http://localhost:8082/api/v1/usuarios/"
   r2dbc:
     host: "localhost"
     port: 5432
@@ -13,6 +13,11 @@ adapters:
     schema: "public"
     username: "app_user"
     password: "app_pass"
+  sqs:
+    region: "us-east-1"
+    queueUrl: "https://sqs.us-east-1.amazonaws.com/825765403293/PragmaNotificationQueue"
+    endpoint: "http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/pragma-test-queue" # For localstack only
+
 security:
   jwt:
     secret: "kYf5mJvQx6jR1LWYiwvhP2Z5gTw4Xt4lUOpd4XyD5rk=" # debe coincidir con auth-service

@@ -2,6 +2,7 @@ package co.com.bancolombia.api.exception;
 
 import co.com.bancolombia.api.dto.ErrorResponse;
 import co.com.bancolombia.exception.DomainException;
+import co.com.bancolombia.exception.ErrorCode;
 import co.com.bancolombia.exception.ExternalServiceException;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.core.annotation.Order;
@@ -52,10 +53,15 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
                 message = rse.getReason();
             }
             case DomainException domainException -> {
-                status = HttpStatus.BAD_REQUEST;
+                status = getDomainStatus(domainException.getErrorCode());
                 details = domainException.getDetails();
+                message = domainException.getMessage();
             }
             case ExternalServiceException externalServiceException -> status = HttpStatus.SERVICE_UNAVAILABLE;
+            case JsonProcessingRuntimeException jsonEx -> {
+                status = HttpStatus.BAD_REQUEST;
+                message = "Error procesando JSON: " + jsonEx.getMessage();
+            }
             default -> status = HttpStatus.BAD_REQUEST;
         }
 
@@ -74,5 +80,15 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
         DataBufferFactory dbf = exchange.getResponse().bufferFactory();
         return exchange.getResponse().writeWith(Mono.just(dbf.wrap(bytes)));
+    }
+
+    private HttpStatus getDomainStatus(ErrorCode errorCode) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        if (errorCode == ErrorCode.APPLICANT_NOT_FOUND || errorCode == ErrorCode.LOAN_NOT_FOUND) {
+            status = HttpStatus.NOT_FOUND;
+        }
+
+        return status;
     }
 }

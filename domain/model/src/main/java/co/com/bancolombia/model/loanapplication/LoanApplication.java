@@ -24,5 +24,6 @@ public class LoanApplication {
     private BigDecimal monthlyInstallment;
     private String comment;
     private Instant createdAt;
+    private Instant updatedAt;
     private LoanStatus status;
 }

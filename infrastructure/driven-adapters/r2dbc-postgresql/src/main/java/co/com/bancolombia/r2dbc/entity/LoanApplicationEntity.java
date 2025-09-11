@@ -24,6 +24,8 @@ public record LoanApplicationEntity(
         String comment,
         @Column("created_at")
         Instant createdAt,
+        @Column("updated_at")
+        Instant updatedAt,
         String status
 ) {
 }
