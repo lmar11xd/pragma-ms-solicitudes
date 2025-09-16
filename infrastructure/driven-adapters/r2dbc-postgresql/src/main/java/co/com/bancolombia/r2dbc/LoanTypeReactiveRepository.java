@@ -9,4 +9,7 @@ import reactor.core.publisher.Mono;
 public interface LoanTypeReactiveRepository extends ReactiveCrudRepository<LoanTypeEntity, String>, ReactiveQueryByExampleExecutor<LoanTypeEntity> {
     @Query("select exists(select 1 from loan_types where code = :code)")
     Mono<Boolean> existsByCode(String code);
+
+    @Query("select validation_automatic from loan_types where code = :code")
+    Mono<Boolean> isValidationAutomatic(String code);
 }

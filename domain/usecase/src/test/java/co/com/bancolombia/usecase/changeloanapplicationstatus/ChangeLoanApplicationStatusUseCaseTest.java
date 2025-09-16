@@ -26,7 +26,6 @@ import static org.mockito.Mockito.*;
 class ChangeLoanApplicationStatusUseCaseTest {
 
     private LoanApplicationRepository loanApplicationRepository;
-    private SecurityPort securityPort;
     private ApplicantPort applicantPort;
     private NotificationPort notificationPort;
     private ChangeLoanApplicationStatusUseCase useCase;
@@ -48,12 +47,11 @@ class ChangeLoanApplicationStatusUseCaseTest {
     @BeforeEach
     void setUp() {
         loanApplicationRepository = mock(LoanApplicationRepository.class);
-        securityPort = mock(SecurityPort.class);
         applicantPort = mock(ApplicantPort.class);
         notificationPort = mock(NotificationPort.class);
 
         useCase = new ChangeLoanApplicationStatusUseCase(
-                loanApplicationRepository, securityPort, applicantPort, notificationPort
+                loanApplicationRepository, applicantPort, notificationPort
         );
     }
 
@@ -63,8 +61,7 @@ class ChangeLoanApplicationStatusUseCaseTest {
 
         when(loanApplicationRepository.findById("loan-123")).thenReturn(Mono.just(loanApplication));
         when(loanApplicationRepository.save(any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        when(securityPort.getCurrentUserToken()).thenReturn(Mono.just("token-abc"));
-        when(applicantPort.findApplicantByDocumentNumber("123456789", "token-abc"))
+        when(applicantPort.findApplicantByDocumentNumber("123456789"))
                 .thenReturn(Mono.just(applicant));
         when(notificationPort.send(any(Notification.class))).thenReturn(Mono.empty());
 
@@ -86,8 +83,7 @@ class ChangeLoanApplicationStatusUseCaseTest {
 
         when(loanApplicationRepository.findById("loan-123")).thenReturn(Mono.just(loanApplication));
         when(loanApplicationRepository.save(any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        when(securityPort.getCurrentUserToken()).thenReturn(Mono.just("token-abc"));
-        when(applicantPort.findApplicantByDocumentNumber("123456789", "token-abc"))
+        when(applicantPort.findApplicantByDocumentNumber("123456789"))
                 .thenReturn(Mono.just(applicant));
         when(notificationPort.send(any(Notification.class))).thenReturn(Mono.empty());
 
@@ -119,25 +115,10 @@ class ChangeLoanApplicationStatusUseCaseTest {
     }
 
     @Test
-    void shouldFailWhenUnauthorized() {
-        when(loanApplicationRepository.findById("loan-123")).thenReturn(Mono.just(loanApplication));
-        when(loanApplicationRepository.save(any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        when(securityPort.getCurrentUserToken()).thenReturn(Mono.empty());
-
-        StepVerifier.create(useCase.changeStatus("loan-123", LoanStatus.APPROVED))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(DomainException.class);
-                    assertThat(((DomainException) error).getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED);
-                })
-                .verify();
-    }
-
-    @Test
     void shouldFailWhenApplicantNotFound() {
         when(loanApplicationRepository.findById("loan-123")).thenReturn(Mono.just(loanApplication));
         when(loanApplicationRepository.save(any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        when(securityPort.getCurrentUserToken()).thenReturn(Mono.just("token-abc"));
-        when(applicantPort.findApplicantByDocumentNumber("123456789", "token-abc")).thenReturn(Mono.empty());
+        when(applicantPort.findApplicantByDocumentNumber("123456789")).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.changeStatus("loan-123", LoanStatus.APPROVED))
                 .expectErrorSatisfies(error -> {

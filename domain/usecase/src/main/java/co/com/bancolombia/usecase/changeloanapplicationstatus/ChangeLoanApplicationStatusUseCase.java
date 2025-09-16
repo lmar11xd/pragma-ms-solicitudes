@@ -8,7 +8,6 @@ import co.com.bancolombia.model.loanapplication.LoanStatus;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.notification.Notification;
 import co.com.bancolombia.model.notification.gateways.NotificationPort;
-import co.com.bancolombia.model.security.SecurityPort;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -18,7 +17,6 @@ import java.time.Instant;
 public class ChangeLoanApplicationStatusUseCase {
 
     private final LoanApplicationRepository loanApplicationRepository;
-    private final SecurityPort securityPort;
     private final ApplicantPort applicantPort;
     private final NotificationPort notificationPort;
 
@@ -45,12 +43,8 @@ public class ChangeLoanApplicationStatusUseCase {
                     );
 
                     return loanApplicationRepository.save(loanUpdated)
-                            .flatMap(loanSaved -> securityPort
-                                    .getCurrentUserToken()
-                                    .switchIfEmpty(Mono.error(new DomainException(ErrorCode.UNAUTHORIZED)))
-                                    .flatMap(token -> applicantPort
-                                            .findApplicantByDocumentNumber(loanSaved.getDocumentNumber(), token)
-                                    )
+                            .flatMap(loanSaved -> applicantPort
+                                    .findApplicantByDocumentNumber(loanSaved.getDocumentNumber())
                                     .switchIfEmpty(Mono.error(new DomainException(ErrorCode.APPLICANT_NOT_FOUND)))
                                     .flatMap(applicant -> {
                                         Notification notification = Notification

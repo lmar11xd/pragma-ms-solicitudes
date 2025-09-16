@@ -56,27 +56,20 @@ public class LoanApplicationUseCase {
                 .existsByCode(loanApplication.getLoanTypeCode())
                 .flatMap(exists -> {
                             if (Boolean.TRUE.equals(exists)) {
-                                return Mono.zip(
-                                                securityPort.getCurrentUserToken(),
-                                                securityPort.getAuthenticatedEmail()
-                                        )
+                                return securityPort.getAuthenticatedEmail()
                                         .switchIfEmpty(Mono.error(new DomainException(ErrorCode.UNAUTHORIZED)))
-                                        .flatMap(tuple -> {
-                                                    String token = tuple.getT1();
-                                                    String emailFromToken = tuple.getT2();
+                                        .flatMap(emailFromToken -> applicantPort
+                                                .findApplicantByDocumentNumber(loanApplication.getDocumentNumber()) // Obtiene solicitante del MS Autenticacion
+                                                .switchIfEmpty(Mono.error(new DomainException(ErrorCode.APPLICANT_NOT_FOUND)))
+                                                .flatMap(applicant -> {
+                                                            if (!applicant.getEmail().equals(emailFromToken)) { // Email no coincide
+                                                                return Mono.error(new DomainException(ErrorCode.UNAUTHORIZED_ACTION));
+                                                            }
 
-                                                    return applicantPort
-                                                            .findApplicantByDocumentNumber(loanApplication.getDocumentNumber(), token) // Obtiene solicitante del MS Autenticacion
-                                                            .switchIfEmpty(Mono.error(new DomainException(ErrorCode.APPLICANT_NOT_FOUND)))
-                                                            .flatMap(applicant -> {
-                                                                        if (!applicant.getEmail().equals(emailFromToken)) { // Email no coincide
-                                                                            return Mono.error(new DomainException(ErrorCode.UNAUTHORIZED_ACTION));
-                                                                        }
+                                                            return loanApplicationRepository.save(loanApplication);
+                                                        }
+                                                )
 
-                                                                        return loanApplicationRepository.save(loanApplication);
-                                                                    }
-                                                            );
-                                                }
                                         );
                             }
 
@@ -104,13 +97,13 @@ public class LoanApplicationUseCase {
 
         Flux<AdvisorReviewItem> rows = loanApplicationRepository
                 .findForFilters(lststatuses, loanTypeCode, documentNumber, offset, size)
-                .flatMap(loan -> securityPort.getCurrentUserToken()
-                        .flatMap(token -> Mono.zip(
-                                applicantPort.findApplicantByDocumentNumber(loan.getDocumentNumber(), token),
+                .flatMap(loan -> Mono.zip(
+                                applicantPort.findApplicantByDocumentNumber(loan.getDocumentNumber()),
                                 loanApplicationRepository
                                         .sumApprovedMonthlyDebtByDocument(loan.getDocumentNumber())
-                                        .defaultIfEmpty(BigDecimal.ZERO))
-                        ).map(tuple -> {
+                                        .defaultIfEmpty(BigDecimal.ZERO)
+                        )
+                        .map(tuple -> {
                             Applicant applicant = tuple.getT1();
                             BigDecimal debtApprovedApplications = tuple.getT2();
 

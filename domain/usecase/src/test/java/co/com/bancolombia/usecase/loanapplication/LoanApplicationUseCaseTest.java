@@ -99,7 +99,6 @@ class LoanApplicationUseCaseTest {
     @Test
     void shouldFailWhenSecurityPortIsEmpty() {
         when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
-        when(securityPort.getCurrentUserToken()).thenReturn(Mono.empty());
         when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.create(validLoan))
@@ -111,9 +110,8 @@ class LoanApplicationUseCaseTest {
     @Test
     void shouldFailWhenApplicantNotFound() {
         when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
-        when(securityPort.getCurrentUserToken()).thenReturn(Mono.just("token"));
         when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.just("user@test.com"));
-        when(applicantPort.findApplicantByDocumentNumber("12345678", "token"))
+        when(applicantPort.findApplicantByDocumentNumber("12345678"))
                 .thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.create(validLoan))
@@ -125,13 +123,12 @@ class LoanApplicationUseCaseTest {
     @Test
     void shouldFailWhenApplicantEmailDoesNotMatch() {
         when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
-        when(securityPort.getCurrentUserToken()).thenReturn(Mono.just("token"));
         when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.just("other@test.com"));
 
         Applicant applicant = new Applicant();
         applicant.setEmail("user@test.com");
 
-        when(applicantPort.findApplicantByDocumentNumber("12345678", "token"))
+        when(applicantPort.findApplicantByDocumentNumber("12345678"))
                 .thenReturn(Mono.just(applicant));
 
         StepVerifier.create(useCase.create(validLoan))
@@ -143,13 +140,12 @@ class LoanApplicationUseCaseTest {
     @Test
     void shouldSaveWhenValidApplication() {
         when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
-        when(securityPort.getCurrentUserToken()).thenReturn(Mono.just("token"));
         when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.just("user@test.com"));
 
         Applicant applicant = new Applicant();
         applicant.setEmail("user@test.com");
 
-        when(applicantPort.findApplicantByDocumentNumber("12345678", "token"))
+        when(applicantPort.findApplicantByDocumentNumber("12345678"))
                 .thenReturn(Mono.just(applicant));
 
         when(loanApplicationRepository.save(any(LoanApplication.class)))
@@ -190,8 +186,7 @@ class LoanApplicationUseCaseTest {
         when(loanApplicationRepository.findForFilters(anyList(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(Flux.just(loan));
 
-        when(securityPort.getCurrentUserToken()).thenReturn(Mono.just("mock-token"));
-        when(applicantPort.findApplicantByDocumentNumber(eq("123"), eq("mock-token")))
+        when(applicantPort.findApplicantByDocumentNumber(eq("123")))
                 .thenReturn(Mono.just(applicant));
         when(loanApplicationRepository.sumApprovedMonthlyDebtByDocument(eq("123")))
                 .thenReturn(Mono.just(BigDecimal.valueOf(500)));

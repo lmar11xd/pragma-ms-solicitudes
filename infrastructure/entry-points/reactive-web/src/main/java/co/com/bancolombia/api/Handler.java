@@ -47,7 +47,7 @@ public class Handler {
                 .flatMap(body -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(body))
-                .doOnError(e -> log.error("Falló listando solicitudes para asesor: {}", e.getMessage(), e));
+                .doOnError(e -> log.error("Falló listando solicitudes: {}", e.getMessage(), e));
     }
 
     public Mono<ServerResponse> changeStatus(ServerRequest request) {
@@ -61,7 +61,7 @@ public class Handler {
                 .flatMap(body -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(body))
-                .doOnError(e -> log.error("Falló actualizando estado solicitud id={}: {}", loanId, e.getMessage(), e));
+                .doOnError(e -> log.error("Falló cambio de estado solicitud id={}: {}", loanId, e.getMessage(), e));
 
     }
 }

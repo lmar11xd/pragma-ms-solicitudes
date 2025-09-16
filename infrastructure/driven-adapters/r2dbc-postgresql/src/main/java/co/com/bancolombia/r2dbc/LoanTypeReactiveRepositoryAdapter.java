@@ -26,4 +26,9 @@ public class LoanTypeReactiveRepositoryAdapter extends ReactiveAdapterOperations
         log.info("Comprobando si existe tipo de credito con codigo {}", code);
         return repository.existsByCode(code);
     }
+
+    @Override
+    public Mono<Boolean> isValidationAutomatic(String code) {
+        return repository.isValidationAutomatic(code);
+    }
 }
