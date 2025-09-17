@@ -1,11 +1,7 @@
-package co.com.bancolombia.model.notification;
+package co.com.bancolombia.model.events;
 
 import co.com.bancolombia.model.loanapplication.LoanStatus;
-import lombok.Builder;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -15,7 +11,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class Notification {
+public class ChangeStatusEvent {
     private String email;
     private LoanStatus status;
     private String documentNumber;

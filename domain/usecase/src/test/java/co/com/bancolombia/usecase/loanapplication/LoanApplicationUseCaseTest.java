@@ -9,7 +9,10 @@ import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.LoanStatus;
 import co.com.bancolombia.model.loanapplication.Page;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
+import co.com.bancolombia.model.loantype.LoanType;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
+import co.com.bancolombia.model.notification.EventType;
+import co.com.bancolombia.model.notification.gateways.NotificationPort;
 import co.com.bancolombia.model.security.SecurityPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,12 +24,15 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class LoanApplicationUseCaseTest {
 
@@ -38,29 +44,47 @@ class LoanApplicationUseCaseTest {
     private ApplicantPort applicantPort;
     @Mock
     private SecurityPort securityPort;
+    @Mock
+    private NotificationPort notificationPort;
 
     @InjectMocks
     private LoanApplicationUseCase useCase;
 
-    private LoanApplication validLoan;
+    private LoanApplication loanApplication;
+    private Applicant applicant;
+    private LoanType loanType;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        validLoan = new LoanApplication();
-        validLoan.setDocumentNumber("12345678");
-        validLoan.setAmount(BigDecimal.valueOf(1000));
-        validLoan.setTermMonths(12);
-        validLoan.setLoanTypeCode("PERSONAL");
-        validLoan.setInterestRate(BigDecimal.valueOf(10));
+        loanApplication = LoanApplication.builder()
+                .loanTypeCode("PERSONAL")
+                .amount(BigDecimal.valueOf(1000))
+                .interestRate(BigDecimal.valueOf(10))
+                .termMonths(12)
+                .documentNumber("12345678")
+                .build();
+
+        applicant = Applicant.builder()
+                .documentNumber("12345678")
+                .email("user@test.com")
+                .names("Juan")
+                .lastNames("Pérez")
+                .baseSalary(BigDecimal.valueOf(3000))
+                .build();
+
+        loanType = LoanType.builder()
+                .code("PERSONAL")
+                .validationAutomatic(true)
+                .build();
     }
 
     @Test
     void shouldFailWhenDocumentIsBlank() {
-        validLoan.setDocumentNumber(" ");
+        loanApplication.setDocumentNumber(" ");
 
-        StepVerifier.create(useCase.create(validLoan))
+        StepVerifier.create(useCase.create(loanApplication))
                 .expectErrorMatches(ex -> ex instanceof DomainException &&
                         ((DomainException) ex).getErrorCode() == ErrorCode.REQUERID_DOCUMENTNUMBER)
                 .verify();
@@ -68,9 +92,9 @@ class LoanApplicationUseCaseTest {
 
     @Test
     void shouldFailWhenAmountIsInvalid() {
-        validLoan.setAmount(BigDecimal.ZERO);
+        loanApplication.setAmount(BigDecimal.ZERO);
 
-        StepVerifier.create(useCase.create(validLoan))
+        StepVerifier.create(useCase.create(loanApplication))
                 .expectErrorMatches(ex -> ex instanceof DomainException &&
                         ((DomainException) ex).getErrorCode() == ErrorCode.INVALID_AMOUNT)
                 .verify();
@@ -78,9 +102,9 @@ class LoanApplicationUseCaseTest {
 
     @Test
     void shouldFailWhenTermIsInvalid() {
-        validLoan.setTermMonths(0);
+        loanApplication.setTermMonths(0);
 
-        StepVerifier.create(useCase.create(validLoan))
+        StepVerifier.create(useCase.create(loanApplication))
                 .expectErrorMatches(ex -> ex instanceof DomainException &&
                         ((DomainException) ex).getErrorCode() == ErrorCode.INVALID_TERMMONTHS)
                 .verify();
@@ -88,9 +112,9 @@ class LoanApplicationUseCaseTest {
 
     @Test
     void shouldFailWhenLoanTypeDoesNotExist() {
-        when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(false));
+        when(loanTypeRepository.findByCode("PERSONAL")).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.create(validLoan))
+        StepVerifier.create(useCase.create(loanApplication))
                 .expectErrorMatches(ex -> ex instanceof DomainException &&
                         ((DomainException) ex).getErrorCode() == ErrorCode.INVALID_LOANTYPE)
                 .verify();
@@ -98,10 +122,10 @@ class LoanApplicationUseCaseTest {
 
     @Test
     void shouldFailWhenSecurityPortIsEmpty() {
-        when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
+        when(loanTypeRepository.findByCode("PERSONAL")).thenReturn(Mono.just(loanType));
         when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.create(validLoan))
+        StepVerifier.create(useCase.create(loanApplication))
                 .expectErrorMatches(ex -> ex instanceof DomainException &&
                         ((DomainException) ex).getErrorCode() == ErrorCode.UNAUTHORIZED)
                 .verify();
@@ -109,12 +133,12 @@ class LoanApplicationUseCaseTest {
 
     @Test
     void shouldFailWhenApplicantNotFound() {
-        when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
+        when(loanTypeRepository.findByCode("PERSONAL")).thenReturn(Mono.just(loanType));
         when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.just("user@test.com"));
         when(applicantPort.findApplicantByDocumentNumber("12345678"))
                 .thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.create(validLoan))
+        StepVerifier.create(useCase.create(loanApplication))
                 .expectErrorMatches(ex -> ex instanceof DomainException &&
                         ((DomainException) ex).getErrorCode() == ErrorCode.APPLICANT_NOT_FOUND)
                 .verify();
@@ -122,16 +146,13 @@ class LoanApplicationUseCaseTest {
 
     @Test
     void shouldFailWhenApplicantEmailDoesNotMatch() {
-        when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
+        when(loanTypeRepository.findByCode("PERSONAL")).thenReturn(Mono.just(loanType));
         when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.just("other@test.com"));
-
-        Applicant applicant = new Applicant();
-        applicant.setEmail("user@test.com");
 
         when(applicantPort.findApplicantByDocumentNumber("12345678"))
                 .thenReturn(Mono.just(applicant));
 
-        StepVerifier.create(useCase.create(validLoan))
+        StepVerifier.create(useCase.create(loanApplication))
                 .expectErrorMatches(ex -> ex instanceof DomainException &&
                         ((DomainException) ex).getErrorCode() == ErrorCode.UNAUTHORIZED_ACTION)
                 .verify();
@@ -139,11 +160,8 @@ class LoanApplicationUseCaseTest {
 
     @Test
     void shouldSaveWhenValidApplication() {
-        when(loanTypeRepository.existsByCode("PERSONAL")).thenReturn(Mono.just(true));
+        when(loanTypeRepository.findByCode("PERSONAL")).thenReturn(Mono.just(loanType));
         when(securityPort.getAuthenticatedEmail()).thenReturn(Mono.just("user@test.com"));
-
-        Applicant applicant = new Applicant();
-        applicant.setEmail("user@test.com");
 
         when(applicantPort.findApplicantByDocumentNumber("12345678"))
                 .thenReturn(Mono.just(applicant));
@@ -151,7 +169,12 @@ class LoanApplicationUseCaseTest {
         when(loanApplicationRepository.save(any(LoanApplication.class)))
                 .thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
-        StepVerifier.create(useCase.create(validLoan))
+        when(loanApplicationRepository.sumApprovedMonthlyDebtByDocument("12345678"))
+                .thenReturn(Mono.just(BigDecimal.ZERO));
+
+        when(notificationPort.send(any(), eq(EventType.CAPACITY_LAMBDA))).thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.create(loanApplication))
                 .assertNext(result -> {
                     assert result.getStatus() == LoanStatus.PENDING;
                     assert result.getAmount().equals(BigDecimal.valueOf(1000));
@@ -165,20 +188,12 @@ class LoanApplicationUseCaseTest {
     void listPendingApplicationsShouldReturnPageResponse() {
         // Arrange
         LoanApplication loan = new LoanApplication();
-        loan.setDocumentNumber("123");
+        loan.setDocumentNumber("12345678");
         loan.setAmount(BigDecimal.valueOf(10000));
         loan.setTermMonths(12);
-        loan.setLoanTypeCode("HOME");
+        loan.setLoanTypeCode("PERSONAL");
         loan.setInterestRate(BigDecimal.valueOf(12));
         loan.setStatus(LoanStatus.PENDING);
-
-        Applicant applicant = new Applicant(
-                "1", "Juan", "Pérez", "123",
-                LocalDate.of(1990, 5, 20),
-                "Calle 123", "987654321",
-                "juan@example.com",
-                BigDecimal.valueOf(3000)
-        );
 
         when(loanApplicationRepository.countForFilters(anyList(), any(), any()))
                 .thenReturn(Mono.just(1L));
@@ -186,9 +201,10 @@ class LoanApplicationUseCaseTest {
         when(loanApplicationRepository.findForFilters(anyList(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(Flux.just(loan));
 
-        when(applicantPort.findApplicantByDocumentNumber(eq("123")))
+        when(applicantPort.findApplicantByDocumentNumber(eq("12345678")))
                 .thenReturn(Mono.just(applicant));
-        when(loanApplicationRepository.sumApprovedMonthlyDebtByDocument(eq("123")))
+
+        when(loanApplicationRepository.sumApprovedMonthlyDebtByDocument(eq("12345678")))
                 .thenReturn(Mono.just(BigDecimal.valueOf(500)));
 
         // Act
@@ -203,47 +219,12 @@ class LoanApplicationUseCaseTest {
 
                     AdvisorReviewItem item = page.content().getFirst();
                     assertThat(item.names()).isEqualTo("Juan Pérez");
-                    assertThat(item.email()).isEqualTo("juan@example.com");
-                    assertThat(item.documentNumber()).isEqualTo("123");
-                    assertThat(item.loanType()).isEqualTo("HOME");
+                    assertThat(item.email()).isEqualTo("user@test.com");
+                    assertThat(item.documentNumber()).isEqualTo("12345678");
+                    assertThat(item.loanType()).isEqualTo("PERSONAL");
                     assertThat(item.baseSalary()).isEqualByComparingTo("3000");
                     assertThat(item.totalMonthlyDebtApprovedRequest()).isEqualByComparingTo("500");
                 })
                 .verifyComplete();
-    }
-
-    @Test
-    void calculateMonthlyInstallmentShouldCalculateCorrectly() throws Exception {
-        // Access private method via reflection
-        var method = LoanApplicationUseCase.class
-                .getDeclaredMethod("calculateMonthlyInstallment", BigDecimal.class, BigDecimal.class, int.class);
-        method.setAccessible(true);
-
-        BigDecimal result = (BigDecimal) method.invoke(useCase, BigDecimal.valueOf(10000), BigDecimal.valueOf(12), 12);
-
-        assertThat(result).isNotNull();
-        assertThat(result.doubleValue()).isGreaterThan(0);
-    }
-
-    @Test
-    void calculateMonthlyInstallmentShouldHandleZeroInterestRate() throws Exception {
-        var method = LoanApplicationUseCase.class
-                .getDeclaredMethod("calculateMonthlyInstallment", BigDecimal.class, BigDecimal.class, int.class);
-        method.setAccessible(true);
-
-        BigDecimal result = (BigDecimal) method.invoke(useCase, BigDecimal.valueOf(1200), BigDecimal.ZERO, 12);
-
-        assertThat(result).isEqualByComparingTo("100.00"); // 1200 / 12
-    }
-
-    @Test
-    void calculateMonthlyInstallmentShouldThrowExceptionForInvalidParams() throws Exception {
-        var method = LoanApplicationUseCase.class
-                .getDeclaredMethod("calculateMonthlyInstallment", BigDecimal.class, BigDecimal.class, int.class);
-        method.setAccessible(true);
-
-        assertThrows(Exception.class, () -> method.invoke(useCase, null, BigDecimal.TEN, 12));
-        assertThrows(Exception.class, () -> method.invoke(useCase, BigDecimal.TEN, null, 12));
-        assertThrows(Exception.class, () -> method.invoke(useCase, BigDecimal.TEN, BigDecimal.ONE, 0));
     }
 }

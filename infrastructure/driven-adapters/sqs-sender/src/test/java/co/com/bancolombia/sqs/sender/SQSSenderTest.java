@@ -2,7 +2,8 @@ package co.com.bancolombia.sqs.sender;
 
 import co.com.bancolombia.exception.DomainException;
 import co.com.bancolombia.exception.ErrorCode;
-import co.com.bancolombia.model.notification.Notification;
+import co.com.bancolombia.model.events.ChangeStatusEvent;
+import co.com.bancolombia.model.notification.EventType;
 import co.com.bancolombia.sqs.sender.config.SQSSenderProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +37,7 @@ class SQSSenderTest {
     @Test
     void shouldSendMessageSuccessfully() {
         // Arrange
-        Notification notification = Notification.builder()
+        ChangeStatusEvent notification = ChangeStatusEvent.builder()
                 .documentNumber("12345")
                 .email("test@test.com")
                 .build();
@@ -49,7 +50,7 @@ class SQSSenderTest {
                 .thenReturn(CompletableFuture.completedFuture(response));
 
         // Act & Assert
-        StepVerifier.create(sender.send(notification))
+        StepVerifier.create(sender.send(notification, EventType.NOTIFICATION_LAMBDA))
                 .expectNext("msg-123")
                 .verifyComplete();
 
@@ -59,7 +60,7 @@ class SQSSenderTest {
     @Test
     void shouldFailWhenJsonProcessingException() throws Exception {
         // Arrange
-        Notification notification = Notification.builder().documentNumber("9999").build();
+        ChangeStatusEvent notification = ChangeStatusEvent.builder().documentNumber("9999").build();
 
         ObjectMapper mockMapper = mock(ObjectMapper.class);
         sender = new SQSSender(properties, client, mockMapper);
@@ -67,7 +68,7 @@ class SQSSenderTest {
         when(mockMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("boom") {});
 
         // Act & Assert
-        StepVerifier.create(sender.send(notification))
+        StepVerifier.create(sender.send(notification, EventType.NOTIFICATION_LAMBDA))
                 .expectErrorSatisfies(ex -> {
                     assert(ex instanceof DomainException);
                     assert(((DomainException) ex).getErrorCode() == ErrorCode.SQS_SEND_ERROR);
@@ -78,13 +79,13 @@ class SQSSenderTest {
     @Test
     void shouldFailWhenSqsClientThrowsError() {
         // Arrange
-        Notification notification = Notification.builder().documentNumber("12345").build();
+        ChangeStatusEvent notification = ChangeStatusEvent.builder().documentNumber("12345").build();
 
         when(client.sendMessage(any(SendMessageRequest.class)))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("SQS unavailable")));
 
         // Act & Assert
-        StepVerifier.create(sender.send(notification))
+        StepVerifier.create(sender.send(notification, EventType.NOTIFICATION_LAMBDA))
                 .expectErrorSatisfies(ex -> {
                     assert(ex instanceof DomainException);
                     assert(((DomainException) ex).getErrorCode() == ErrorCode.SQS_SEND_ERROR);

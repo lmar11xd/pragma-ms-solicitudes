@@ -13,6 +13,7 @@ public enum ErrorCode {
     UNAUTHORIZED("UNAUTHORIZED", "No tiene autorización para acceder a este recurso."),
     FORBIDDEN("FORBIDDEN", "Acceso denegado."),
     UNAUTHORIZED_ACTION("UNAUTHORIZED_ACTION", "No puedes crear solicitudes para otro usuario"),
+    INVALID_LOAN_PARAMETERS("INVALID_LOAN_PARAMETERS", "Parametros de credito invalidos"),
 
     DATABASE_CONSTRAINT_VIOLATION("DATABASE_CONSTRAINT_VIOLATION", "Error de clave unica"),
     DATABASE_LOCK_TIMEOUT("DATABASE_LOCK_TIMEOUT", "Error de conexion a base de datos"),

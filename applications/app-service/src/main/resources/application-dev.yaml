@@ -16,8 +16,16 @@ adapters:
   sqs:
     region: "us-east-1"
     queueUrl: "https://sqs.us-east-1.amazonaws.com/825765403293/PragmaNotificationQueue"
-    endpoint: "https://sqs.us-east-1.amazonaws.com/825765403293/PragmaNotificationQueue" # For localstack only
-
+    endpoint: "https://sqs.us-east-1.amazonaws.com/825765403293/PragmaNotificationQueue"
+entrypoint:
+  sqs:
+    region: "us-east-1"
+    endpoint: "https://sqs.us-east-1.amazonaws.com/825765403293/PragmaCapacityDebtQueue"
+    queueUrl: "https://sqs.us-east-1.amazonaws.com/825765403293/PragmaCapacityDebtQueue"
+    waitTimeSeconds: 20
+    maxNumberOfMessages: 10
+    visibilityTimeoutSeconds: 10
+    numberOfThreads: 1
 security:
   jwt:
     secret: "kYf5mJvQx6jR1LWYiwvhP2Z5gTw4Xt4lUOpd4XyD5rk=" # debe coincidir con auth-service

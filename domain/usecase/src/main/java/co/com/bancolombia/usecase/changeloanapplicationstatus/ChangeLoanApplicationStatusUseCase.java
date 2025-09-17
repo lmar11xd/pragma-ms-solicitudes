@@ -3,10 +3,11 @@ package co.com.bancolombia.usecase.changeloanapplicationstatus;
 import co.com.bancolombia.exception.DomainException;
 import co.com.bancolombia.exception.ErrorCode;
 import co.com.bancolombia.model.applicant.gateways.ApplicantPort;
+import co.com.bancolombia.model.events.EventsFactory;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.LoanStatus;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
-import co.com.bancolombia.model.notification.Notification;
+import co.com.bancolombia.model.notification.EventType;
 import co.com.bancolombia.model.notification.gateways.NotificationPort;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -47,17 +48,8 @@ public class ChangeLoanApplicationStatusUseCase {
                                     .findApplicantByDocumentNumber(loanSaved.getDocumentNumber())
                                     .switchIfEmpty(Mono.error(new DomainException(ErrorCode.APPLICANT_NOT_FOUND)))
                                     .flatMap(applicant -> {
-                                        Notification notification = Notification
-                                                .builder()
-                                                .email(applicant.getEmail())
-                                                .status(loanSaved.getStatus())
-                                                .documentNumber(applicant.getDocumentNumber())
-                                                .amount(loanSaved.getAmount())
-                                                .termMonths(loanSaved.getTermMonths())
-                                                .occurredAt(Instant.now())
-                                                .build();
-
-                                        return notificationPort.send(notification).thenReturn(loanSaved);
+                                        var event = EventsFactory.from(loanSaved, applicant);
+                                        return notificationPort.send(event, EventType.NOTIFICATION_LAMBDA).thenReturn(loanSaved);
                                     })
                             );
                 });

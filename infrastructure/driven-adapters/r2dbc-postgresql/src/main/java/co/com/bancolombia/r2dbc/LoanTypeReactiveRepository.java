@@ -7,6 +7,8 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 
 public interface LoanTypeReactiveRepository extends ReactiveCrudRepository<LoanTypeEntity, String>, ReactiveQueryByExampleExecutor<LoanTypeEntity> {
+    Mono<LoanTypeEntity> findByCode(String code);
+
     @Query("select exists(select 1 from loan_types where code = :code)")
     Mono<Boolean> existsByCode(String code);
 
