@@ -25,6 +25,7 @@ public class SQSSender implements NotificationPort {
 
     public Mono<String> send(Notification notification) {
         log.info("Inicia proceso para enviar Evento SQS");
+
         return Mono.fromCallable(() -> buildRequest(notification))
                 .flatMap(request -> Mono.fromFuture(client.sendMessage(request)))
                 .doOnNext(response -> log.debug("Evento SQS publicado con ID: {}", response.messageId()))
@@ -37,7 +38,9 @@ public class SQSSender implements NotificationPort {
 
     private SendMessageRequest buildRequest(Notification notification) throws JsonProcessingException {
         log.info("Preparando mensaje para Evento SQS {}", notification.getDocumentNumber());
+
         String body = objectMapper.writeValueAsString(notification);
+
         return SendMessageRequest.builder()
                 .queueUrl(properties.queueUrl())
                 .messageBody(body)
