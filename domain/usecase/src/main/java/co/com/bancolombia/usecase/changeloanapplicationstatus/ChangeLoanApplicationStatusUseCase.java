@@ -6,9 +6,9 @@ import co.com.bancolombia.model.applicant.gateways.ApplicantPort;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.LoanStatus;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
+import co.com.bancolombia.model.notification.EventType;
 import co.com.bancolombia.model.notification.Notification;
 import co.com.bancolombia.model.notification.gateways.NotificationPort;
-import co.com.bancolombia.model.security.SecurityPort;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -18,7 +18,6 @@ import java.time.Instant;
 public class ChangeLoanApplicationStatusUseCase {
 
     private final LoanApplicationRepository loanApplicationRepository;
-    private final SecurityPort securityPort;
     private final ApplicantPort applicantPort;
     private final NotificationPort notificationPort;
 
@@ -45,27 +44,41 @@ public class ChangeLoanApplicationStatusUseCase {
                     );
 
                     return loanApplicationRepository.save(loanUpdated)
-                            .flatMap(loanSaved -> securityPort
-                                    .getCurrentUserToken()
-                                    .switchIfEmpty(Mono.error(new DomainException(ErrorCode.UNAUTHORIZED)))
-                                    .flatMap(token -> applicantPort
-                                            .findApplicantByDocumentNumber(loanSaved.getDocumentNumber(), token)
-                                    )
+                            .flatMap(loanSaved -> applicantPort
+                                    .findApplicantByDocumentNumber(loanSaved.getDocumentNumber())
                                     .switchIfEmpty(Mono.error(new DomainException(ErrorCode.APPLICANT_NOT_FOUND)))
-                                    .flatMap(applicant -> {
-                                        Notification notification = Notification
-                                                .builder()
-                                                .email(applicant.getEmail())
-                                                .status(loanSaved.getStatus())
-                                                .documentNumber(applicant.getDocumentNumber())
-                                                .amount(loanSaved.getAmount())
-                                                .termMonths(loanSaved.getTermMonths())
-                                                .occurredAt(Instant.now())
-                                                .build();
-
-                                        return notificationPort.send(notification).thenReturn(loanSaved);
-                                    })
+                                    .flatMap(applicant -> sendNotification(loanSaved, applicant.getEmail()).thenReturn(loanSaved))
                             );
                 });
+    }
+
+    private Mono<Void> sendNotification(LoanApplication loanApplication, String email) {
+        String subject = loanApplication.getStatus() == LoanStatus.APPROVED
+                ? "Solicitud de crédito Aprobada"
+                : "Solicitud de crédito Rechazada";
+
+        String fullBody = buildBody(loanApplication);
+
+        Notification notification = new Notification(
+                email,
+                subject,
+                fullBody
+        );
+
+        return notificationPort.send(notification, EventType.NOTIFICATION_LAMBDA).then();
+    }
+
+    private static String buildBody(LoanApplication loanApplication) {
+        String body = loanApplication.getStatus() == LoanStatus.APPROVED
+                ? "Felicidades, tu solicitud de crédito ha sido aprobada."
+                : "Lamentamos informarte que tu solicitud de crédito ha sido rechazada.";
+
+        return body +
+                "\n" +
+                "Monto: " + loanApplication.getAmount() + "\n" +
+                "Plazo (meses): " + loanApplication.getTermMonths() + "\n" +
+                "Tipo de Crédito: " + loanApplication.getLoanTypeCode() + "\n" +
+                "Tasa de Interés: " + loanApplication.getInterestRate() + "\n" +
+                "Cuota Mensual: " + loanApplication.getMonthlyInstallment() + "\n";
     }
 }

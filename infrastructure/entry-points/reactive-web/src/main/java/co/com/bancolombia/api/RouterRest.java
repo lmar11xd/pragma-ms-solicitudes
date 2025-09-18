@@ -1,8 +1,6 @@
 package co.com.bancolombia.api;
 
-import co.com.bancolombia.api.dto.CreateLoanApplicationRequest;
-import co.com.bancolombia.api.dto.LoanApplicationDto;
-import co.com.bancolombia.api.dto.UpdateStatusRequest;
+import co.com.bancolombia.api.dto.*;
 import co.com.bancolombia.model.loanapplication.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -130,11 +128,42 @@ public class RouterRest {
                                     @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = @Content)
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/calcular-capacidad",
+                    produces = {MediaType.APPLICATION_JSON_VALUE},
+                    consumes = {MediaType.APPLICATION_JSON_VALUE},
+                    method = RequestMethod.POST,
+                    beanClass = Handler.class,
+                    beanMethod = "calculateCapacityDebt",
+                    operation = @Operation(
+                            operationId = "calculateCapacityDebt",
+                            summary = "Calcular capacidad de endeudamiento",
+                            description = "Calcula la capacidad de endeudamiento de un solicitante basado en su salario y deudas actuales. (ALL)",
+                            requestBody = @RequestBody(
+                                    required = true,
+                                    content = @Content(
+                                            schema = @Schema(implementation = CapacityRequest.class)
+                                    )
+                            ),
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Cálculo realizado exitosamente",
+                                            content = @Content(
+                                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                    schema = @Schema(implementation = CapacityResponse.class)
+                                            )
+                                    ),
+                                    @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content)
+                            }
+                    )
             )
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         return route(POST("/api/v1/solicitudes"), handler::create)
                 .andRoute(GET("/api/v1/solicitudes"), handler::listApplications)
-                .andRoute(PUT("/api/v1/solicitud/{id}"), handler::changeStatus);
+                .andRoute(PUT("/api/v1/solicitud/{id}"), handler::changeStatus)
+                .andRoute(POST("/api/v1/calcular-capacidad"), handler::calculateCapacityDebt);
     }
 }

@@ -2,6 +2,7 @@ package co.com.bancolombia.sqs.sender;
 
 import co.com.bancolombia.exception.DomainException;
 import co.com.bancolombia.exception.ErrorCode;
+import co.com.bancolombia.model.notification.EventType;
 import co.com.bancolombia.model.notification.Notification;
 import co.com.bancolombia.sqs.sender.config.SQSSenderProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,24 +23,24 @@ class SQSSenderTest {
 
     private SQSSenderProperties properties;
     private SqsAsyncClient client;
-    private ObjectMapper objectMapper;
     private SQSSender sender;
 
     @BeforeEach
     void setup() {
         properties = new SQSSenderProperties("us-east-1", "http://localhost:4566/queue/test-queue", null);
         client = mock(SqsAsyncClient.class);
-        objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper();
         sender = new SQSSender(properties, client, objectMapper);
     }
 
     @Test
     void shouldSendMessageSuccessfully() {
         // Arrange
-        Notification notification = Notification.builder()
-                .documentNumber("12345")
-                .email("test@test.com")
-                .build();
+        Notification notification = new Notification(
+                "tester@exaple.com",
+                "Test Subject",
+                "This is a test message."
+        );
 
         SendMessageResponse response = SendMessageResponse.builder()
                 .messageId("msg-123")
@@ -49,7 +50,7 @@ class SQSSenderTest {
                 .thenReturn(CompletableFuture.completedFuture(response));
 
         // Act & Assert
-        StepVerifier.create(sender.send(notification))
+        StepVerifier.create(sender.send(notification, EventType.NOTIFICATION_LAMBDA))
                 .expectNext("msg-123")
                 .verifyComplete();
 
@@ -59,7 +60,11 @@ class SQSSenderTest {
     @Test
     void shouldFailWhenJsonProcessingException() throws Exception {
         // Arrange
-        Notification notification = Notification.builder().documentNumber("9999").build();
+        Notification notification = new Notification(
+                "tester@exaple.com",
+                "Test Subject",
+                "This is a test message."
+        );
 
         ObjectMapper mockMapper = mock(ObjectMapper.class);
         sender = new SQSSender(properties, client, mockMapper);
@@ -67,7 +72,7 @@ class SQSSenderTest {
         when(mockMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("boom") {});
 
         // Act & Assert
-        StepVerifier.create(sender.send(notification))
+        StepVerifier.create(sender.send(notification, EventType.NOTIFICATION_LAMBDA))
                 .expectErrorSatisfies(ex -> {
                     assert(ex instanceof DomainException);
                     assert(((DomainException) ex).getErrorCode() == ErrorCode.SQS_SEND_ERROR);
@@ -78,13 +83,17 @@ class SQSSenderTest {
     @Test
     void shouldFailWhenSqsClientThrowsError() {
         // Arrange
-        Notification notification = Notification.builder().documentNumber("12345").build();
+        Notification notification = new Notification(
+                "tester@exaple.com",
+                "Test Subject",
+                "This is a test message."
+        );
 
         when(client.sendMessage(any(SendMessageRequest.class)))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("SQS unavailable")));
 
         // Act & Assert
-        StepVerifier.create(sender.send(notification))
+        StepVerifier.create(sender.send(notification, EventType.NOTIFICATION_LAMBDA))
                 .expectErrorSatisfies(ex -> {
                     assert(ex instanceof DomainException);
                     assert(((DomainException) ex).getErrorCode() == ErrorCode.SQS_SEND_ERROR);

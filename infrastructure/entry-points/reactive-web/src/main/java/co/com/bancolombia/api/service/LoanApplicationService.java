@@ -1,10 +1,11 @@
 package co.com.bancolombia.api.service;
 
-import co.com.bancolombia.api.dto.AdvisorReviewResponse;
-import co.com.bancolombia.api.dto.LoanApplicationDto;
+import co.com.bancolombia.api.dto.*;
 import co.com.bancolombia.api.mapper.LoanApplicationMapper;
+import co.com.bancolombia.model.loanapplication.CapacityDebt;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.LoanStatus;
+import co.com.bancolombia.usecase.calculatecapacity.CalculateCapacityUseCase;
 import co.com.bancolombia.usecase.changeloanapplicationstatus.ChangeLoanApplicationStatusUseCase;
 import co.com.bancolombia.usecase.loanapplication.LoanApplicationUseCase;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +24,13 @@ public class LoanApplicationService {
 
     private final ChangeLoanApplicationStatusUseCase changeLoanApplicationStatusUseCase;
 
+    private final CalculateCapacityUseCase calculateCapacityUseCase;
+
     private final TransactionalOperator transactionalOperator;
 
-    public Mono<LoanApplicationDto> create(LoanApplication loanApplication) {
+    public Mono<LoanApplicationDto> create(CreateLoanApplicationRequest dto) {
         return transactionalOperator.transactional(
-                loanApplicationUseCase.create(loanApplication)
+                loanApplicationUseCase.create(LoanApplicationMapper.toDomain(dto))
         ).map(saved -> {
             log.info("Solicitud de credito creada con id {}", saved.getId());
             return LoanApplicationMapper.toDto(saved);
@@ -54,5 +57,25 @@ public class LoanApplicationService {
                         .size(pr.size())
                         .build()
                 );
+    }
+
+    public Mono<CapacityResponse> calculateCapacityDebt(CapacityRequest dto) {
+        return calculateCapacityUseCase.calculate(
+                        new CapacityDebt(
+                                dto.documentNumber(),
+                                dto.applicantBaseSalary(),
+                                dto.amount(),
+                                dto.annualInterestRate(),
+                                dto.termMonths()
+                        )
+                )
+                .map(plan -> new CapacityResponse(
+                        plan.status(),
+                        plan.maxDebtCapacity(),
+                        plan.currentMonthlyDebt(),
+                        plan.availableDebtCapacity(),
+                        plan.loanInstallment(),
+                        plan.schedule()
+                ));
     }
 }

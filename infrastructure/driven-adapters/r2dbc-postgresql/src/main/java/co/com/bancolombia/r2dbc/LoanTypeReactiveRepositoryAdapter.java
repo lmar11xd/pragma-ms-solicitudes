@@ -22,8 +22,27 @@ public class LoanTypeReactiveRepositoryAdapter extends ReactiveAdapterOperations
     }
 
     @Override
+    public Mono<LoanType> findByCode(String code) {
+        log.info("Obtener tipo de credito con codigo {}", code);
+        return repository.findByCode(code).map(entity -> LoanType
+                .builder()
+                .id(entity.id())
+                .code(entity.code())
+                .name(entity.name())
+                .validationAutomatic(entity.validationAutomatic())
+                .build()
+        );
+    }
+
+    @Override
     public Mono<Boolean> existsByCode(String code) {
         log.info("Comprobando si existe tipo de credito con codigo {}", code);
         return repository.existsByCode(code);
+    }
+
+    @Override
+    public Mono<Boolean> isValidationAutomatic(String code) {
+        log.info("Comprobando si tipo de credito con codigo {} tiene validacion automatica", code);
+        return repository.isValidationAutomatic(code);
     }
 }
