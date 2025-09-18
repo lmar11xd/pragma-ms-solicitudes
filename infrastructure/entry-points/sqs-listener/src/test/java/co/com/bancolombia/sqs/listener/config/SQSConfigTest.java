@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 class SQSConfigTest {
-/*
+
     @InjectMocks
     private SQSConfig sqsConfig;
 
@@ -54,5 +54,5 @@ class SQSConfigTest {
     @Test
     void resolveEndpointIsNull() {
         assertThat(sqsConfig.resolveEndpoint(sqsProperties)).isNull();
-    }*/
+    }
 }

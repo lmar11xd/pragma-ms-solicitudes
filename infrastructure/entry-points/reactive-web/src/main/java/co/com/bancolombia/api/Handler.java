@@ -1,5 +1,6 @@
 package co.com.bancolombia.api;
 
+import co.com.bancolombia.api.dto.CapacityRequest;
 import co.com.bancolombia.api.dto.CreateLoanApplicationRequest;
 import co.com.bancolombia.api.dto.UpdateStatusRequest;
 import co.com.bancolombia.api.mapper.LoanApplicationMapper;
@@ -24,7 +25,7 @@ public class Handler {
         log.info("Solicitud POST::create {}", serverRequest.path());
 
         return serverRequest.bodyToMono(CreateLoanApplicationRequest.class)
-                .flatMap(dto -> loanApplicationService.create(LoanApplicationMapper.toDomain(dto)))
+                .flatMap(loanApplicationService::create)
                 .flatMap(response -> ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(response)
@@ -63,5 +64,16 @@ public class Handler {
                         .bodyValue(body))
                 .doOnError(e -> log.error("Falló cambio de estado solicitud id={}: {}", loanId, e.getMessage(), e));
 
+    }
+
+    public Mono<ServerResponse> calculateCapacityDebt(ServerRequest request) {
+        log.info("Solicitud POST::calculateCapacityDebt {}", request.path());
+
+        return request.bodyToMono(CapacityRequest.class)
+                .flatMap(loanApplicationService::calculateCapacityDebt)
+                .flatMap(body -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(body))
+                .doOnError(e -> log.error("Falló consultando capacidad de endeudamiento {}", e.getMessage(), e));
     }
 }

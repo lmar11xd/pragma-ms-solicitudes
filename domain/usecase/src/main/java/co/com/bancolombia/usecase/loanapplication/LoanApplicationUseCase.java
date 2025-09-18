@@ -45,7 +45,7 @@ public class LoanApplicationUseCase {
         // Inicializar campos
         loanApplication.setStatus(LoanStatus.PENDING);
         loanApplication.setMonthlyInstallment(
-                LoanCalculator.calculateMonthlyInstallment(
+                LoanCalculator.monthlyInstallment(
                         loanApplication.getAmount(),
                         loanApplication.getInterestRate(),
                         loanApplication.getTermMonths()

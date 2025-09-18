@@ -4,11 +4,11 @@ import co.com.bancolombia.exception.DomainException;
 import co.com.bancolombia.exception.ErrorCode;
 import co.com.bancolombia.model.applicant.Applicant;
 import co.com.bancolombia.model.applicant.gateways.ApplicantPort;
-import co.com.bancolombia.model.events.ChangeStatusEvent;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.LoanStatus;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.notification.EventType;
+import co.com.bancolombia.model.notification.Notification;
 import co.com.bancolombia.model.notification.gateways.NotificationPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,18 +63,17 @@ class ChangeLoanApplicationStatusUseCaseTest {
         when(loanApplicationRepository.save(any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         when(applicantPort.findApplicantByDocumentNumber("123456789"))
                 .thenReturn(Mono.just(applicant));
-        when(notificationPort.send(any(ChangeStatusEvent.class), any())).thenReturn(Mono.just("OK"));
+        when(notificationPort.send(any(Notification.class), any())).thenReturn(Mono.just("OK"));
 
         StepVerifier.create(useCase.changeStatus("loan-123", LoanStatus.APPROVED))
                 .expectNextMatches(result -> result.getStatus() == LoanStatus.APPROVED)
                 .verifyComplete();
 
-        ArgumentCaptor<ChangeStatusEvent> notificationCaptor = ArgumentCaptor.forClass(ChangeStatusEvent.class);
+        ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationPort).send(notificationCaptor.capture(), eq(EventType.NOTIFICATION_LAMBDA));
 
-        ChangeStatusEvent sent = notificationCaptor.getValue();
-        assertThat(sent.getEmail()).isEqualTo("test@mail.com");
-        assertThat(sent.getStatus()).isEqualTo(LoanStatus.APPROVED);
+        Notification sent = notificationCaptor.getValue();
+        assertThat(sent.email()).isEqualTo("test@mail.com");
     }
 
     @Test
@@ -85,7 +84,7 @@ class ChangeLoanApplicationStatusUseCaseTest {
         when(loanApplicationRepository.save(any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         when(applicantPort.findApplicantByDocumentNumber("123456789"))
                 .thenReturn(Mono.just(applicant));
-        when(notificationPort.send(any(ChangeStatusEvent.class), any())).thenReturn(Mono.empty());
+        when(notificationPort.send(any(Notification.class), any())).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.changeStatus("loan-123", LoanStatus.REJECTED))
                 .expectNextMatches(result -> result.getStatus() == LoanStatus.REJECTED)

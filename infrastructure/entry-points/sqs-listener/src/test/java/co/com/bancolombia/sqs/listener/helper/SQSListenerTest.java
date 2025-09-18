@@ -2,6 +2,7 @@ package co.com.bancolombia.sqs.listener.helper;
 
 import co.com.bancolombia.sqs.listener.SQSProcessor;
 import co.com.bancolombia.sqs.listener.config.SQSProperties;
+import co.com.bancolombia.usecase.processvalidation.ProcessValidationUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -22,7 +23,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 class SQSListenerTest {
-/*
+
+    @Mock
+    private ProcessValidationUseCase processValidationUseCase;
+
     @Mock
     private SqsAsyncClient asyncClient;
 
@@ -32,16 +36,6 @@ class SQSListenerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-
-        var sqsProperties = new SQSProperties(
-                "us-east-1",
-                "http://localhost:4566",
-                "http://localhost:4566/00000000000/queueName",
-                20,
-                30,
-                10,
-                1
-        );
 
         var message = Message.builder().body("message").build();
         var deleteMessageResponse = DeleteMessageResponse.builder().build();
@@ -58,11 +52,11 @@ class SQSListenerTest {
         var sqsListener = SQSListener.builder()
                 .client(asyncClient)
                 .properties(sqsProperties)
-                .processor(new SQSProcessor())
+                .processor(new SQSProcessor(processValidationUseCase))
                 .operation("operation")
                 .build();
 
         Flux<Void> flow = ReflectionTestUtils.invokeMethod(sqsListener, "listen");
         StepVerifier.create(flow).verifyComplete();
-    }*/
+    }
 }

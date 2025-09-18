@@ -14,6 +14,7 @@ public class ValidationEvent {
     private String loanApplicationId;
     private String applicantId;
     private String documentNumber;
+    private String applicantEmail;
     private BigDecimal applicantBaseSalary;
     private BigDecimal amount;
     private BigDecimal annualInterestRate;

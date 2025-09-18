@@ -13,23 +13,13 @@ public class EventsFactory {
                 .loanApplicationId(loan.getId())
                 .applicantId(applicant.getId())
                 .documentNumber(applicant.getDocumentNumber())
+                .applicantEmail(applicant.getEmail())
                 .applicantBaseSalary(applicant.getBaseSalary())
                 .amount(loan.getAmount())
                 .annualInterestRate(loan.getInterestRate())
                 .termMonths(loan.getTermMonths())
                 .loanTypeCode(loan.getLoanTypeCode())
                 .currentMonthlyDebt(monthlyDebt)
-                .occurredAt(Instant.now())
-                .build();
-    }
-
-    public static ChangeStatusEvent from(LoanApplication loan, Applicant applicant) {
-        return ChangeStatusEvent.builder()
-                .email(applicant.getEmail())
-                .status(loan.getStatus())
-                .documentNumber(applicant.getDocumentNumber())
-                .amount(loan.getAmount())
-                .termMonths(loan.getTermMonths())
                 .occurredAt(Instant.now())
                 .build();
     }

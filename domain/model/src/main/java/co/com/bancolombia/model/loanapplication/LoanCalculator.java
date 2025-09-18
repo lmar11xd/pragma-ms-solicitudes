@@ -2,10 +2,13 @@ package co.com.bancolombia.model.loanapplication;
 
 import co.com.bancolombia.exception.DomainException;
 import co.com.bancolombia.exception.ErrorCode;
+import co.com.bancolombia.model.events.AmortizationEntry;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LoanCalculator {
 
@@ -20,7 +23,7 @@ public class LoanCalculator {
         i = Tasa de interés mensual (interestRate / 12)
         n = Plazo en meses (termMonths)
     * */
-    public static BigDecimal calculateMonthlyInstallment(BigDecimal amount, BigDecimal annualRate, int termMonths) {
+    public static BigDecimal monthlyInstallment(BigDecimal amount, BigDecimal annualRate, int termMonths) {
         if (amount == null || annualRate == null || termMonths <= 0) {
             throw new DomainException(ErrorCode.INVALID_LOAN_PARAMETERS);
         }
@@ -40,5 +43,26 @@ public class LoanCalculator {
         );
 
         return numerator.divide(denominator, 2, RoundingMode.HALF_UP);
+    }
+
+    public static List<AmortizationEntry> amortizationSchedule(BigDecimal principal, BigDecimal annualRatePercent, int termMonths) {
+        BigDecimal monthly = monthlyInstallment(principal, annualRatePercent, termMonths);
+        BigDecimal monthlyRate = annualRatePercent.divide(BigDecimal.valueOf(100), MathContext.DECIMAL64)
+                .divide(BigDecimal.valueOf(12), MathContext.DECIMAL64);
+        BigDecimal balance = principal;
+
+        List<AmortizationEntry> sch = new ArrayList<>();
+        for (int m = 1; m <= termMonths; m++) {
+            BigDecimal interest = balance.multiply(monthlyRate).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal principalPaid = monthly.subtract(interest).setScale(2, RoundingMode.HALF_UP);
+            balance = balance.subtract(principalPaid).max(BigDecimal.ZERO);
+            sch.add(new AmortizationEntry(m, monthly, interest, principalPaid, balance));
+        }
+
+        return sch;
+    }
+
+    private LoanCalculator() {
+
     }
 }
